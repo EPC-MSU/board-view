@@ -56,5 +56,3 @@ class GraphicsManualPinItem(QGraphicsItem):
             r = scale_factor * info.radius
             info.item.setRect(QRectF(-r, -r, r * 2, r * 2))
             info.item.setPen(_map_physical_pen_to_scene(info.pen, scale_factor))
-
-

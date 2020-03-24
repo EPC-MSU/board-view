@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QFrame, QGraphicsScene
 from .pin import GraphicsManualPinItem
-from .pen import Pen
+
 
 class BoardViewController(QObject):
     def __init__(self, parent=None) -> None:
