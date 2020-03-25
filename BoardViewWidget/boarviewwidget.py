@@ -1,73 +1,22 @@
 import math
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import QObject
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QFrame, QGraphicsScene
 from .pin import GraphicsManualPinItem
 
 
-class BoardViewController(QObject):
-    def __init__(self, parent=None) -> None:
-        super().__init__(parent=parent)
+class BoardView(QGraphicsView):
+    on_pin = QtCore.pyqtSignal(int)
+
+    def __init__(self, image: QPixmap, parent=None) -> None:
+        super().__init__(parent)
 
         self._start_pos = None
         self._drag = False
-
         self._scale = 1.0
-
         self._pins = []
-
-    def configure_view(self, view) -> None:
-        pass
-
-    def wheel_event(self, view, event) -> None:
-        zoom_factor = 1.0
-        zoom_factor += event.angleDelta().y() * 0.001
-        view.zoom(zoom_factor, event.pos())
-
-        self._scale *= zoom_factor
-
-        for item in self._pins:
-            item.update_scale(1.0 / self._scale * 4.0)
-
-    def enter_event(self, view, event) -> None:
-        pass
-
-    def leave_event(self, view, event) -> None:
-        pass
-
-    def mouse_press_event(self, view, event) -> None:
-        if event.button() & Qt.LeftButton:
-            self._drag = True
-            view.setDragMode(QGraphicsView.ScrollHandDrag)
-            self._start_pos = view.mapToScene(event.pos())
-
-        if event.button() & Qt.RightButton:  # for PIN test
-            pos = view.mapToScene(event.pos())
-            self.add_pin(pos, view)
-
-    def add_pin(self, pos: QPoint, view: "BoardView"):
-        item = GraphicsManualPinItem(pos, 1.0 / self._scale * 4.0)
-        view.board_scene().addItem(item)
-        self._pins.append(item)
-
-    def mouse_move_event(self, view, event) -> None:
-        if not self._drag:
-            return
-        delta = view.mapToScene(event.pos()) - self._start_pos
-        view.move(delta)
-
-    def mouse_release_event(self, view, event) -> None:
-        if event.button() & Qt.LeftButton:
-            view.setDragMode(QGraphicsView.NoDrag)
-            self._drag = False
-
-
-class BoardView(QGraphicsView):
-    def __init__(self, image: QPixmap, parent=None) -> None:
-        super().__init__(parent)
 
         scene = QGraphicsScene()
         scene.addPixmap(image)
@@ -83,27 +32,23 @@ class BoardView(QGraphicsView):
 
         # Mouse
         self.setMouseTracking(True)
-        self.__controller = BoardViewController(parent=self)
-        self.__controller.configure_view(self)
 
         # For keyboard events
         self.setFocusPolicy(Qt.StrongFocus)
 
-    def board_scene(self):
+    def board_scene(self) -> QGraphicsScene:
         return self.__board_scene
 
-    def controller(self) -> BoardViewController:
-        return self.__controller
-
-    def add_pin(self, pin: QPoint):
-        self.__controller.add_pin(pin, self)
+    def add_pin(self, pin: QPoint, number: int):
+        item = GraphicsManualPinItem(pin, 1.0 / self._scale * 4.0, number)
+        self.board_scene().addItem(item)
+        self._pins.append(item)
 
     def __map_length_to_scene(self, length):
         point1, point2 = QPoint(0, 0), QPoint(0, length)
         scene_point1, scene_point2 = self.mapToScene(point1), self.mapToScene(point2)
         return math.sqrt((scene_point2.x() - scene_point1.x()) ** 2 + (scene_point2.y() - scene_point1.y()) ** 2)
 
-    # Api for controller
     def zoom(self, zoom_factor, pos):  # pos in view coordinates
         old_scene_pos = self.mapToScene(pos)
 
@@ -131,31 +76,36 @@ class BoardView(QGraphicsView):
         self.setTransformationAnchor(anchor)  # Restore old anchor
 
     def wheelEvent(self, event):
-        self.__controller.wheel_event(self, event)
+        zoom_factor = 1.0
+        zoom_factor += event.angleDelta().y() * 0.001
+        self.zoom(zoom_factor, event.pos())
 
-    def enterEvent(self, event):
-        self.__controller.enter_event(self, event)
+        self._scale *= zoom_factor
 
-    def leaveEvent(self, event):
-        self.__controller.leave_event(self, event)
+        for item in self._pins:
+            item.update_scale(1.0 / self._scale * 4.0)
 
     def mousePressEvent(self, event):
-        self.__controller.mouse_press_event(self, event)
+        if event.button() & Qt.LeftButton:
+
+            # Check for clicked pin
+            for item in self.items(event.pos()):
+                if isinstance(item, GraphicsManualPinItem):
+                    self.on_pin.emit(item.number)
+                    return
+
+            # We are in drag mode
+            self._drag = True
+            self.setDragMode(QGraphicsView.ScrollHandDrag)
+            self._start_pos = self.mapToScene(event.pos())
 
     def mouseMoveEvent(self, event):
-        self.__controller.mouse_move_event(self, event)
+        if not self._drag:
+            return
+        delta = self.mapToScene(event.pos()) - self._start_pos
+        self.move(delta)
 
     def mouseReleaseEvent(self, event):
-        self.__controller.mouse_release_event(self, event)
-
-    def keyPressEvent(self, event):
-        self.__controller.key_press_event(self, event)
-
-    def keyReleaseEvent(self, event):
-        self.__controller.key_release_event(self, event)
-
-    def showEvent(self, event):
-        super().showEvent(event)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
+        if event.button() & Qt.LeftButton:
+            self.setDragMode(QGraphicsView.NoDrag)
+            self._drag = False

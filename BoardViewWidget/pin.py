@@ -23,14 +23,20 @@ class _PinItemInfo:
 
 
 class GraphicsManualPinItem(QGraphicsItem):
-    def __init__(self, pos, scale_factor, parent=None):
+    def __init__(self, pos, scale_factor, number: int, parent=None):
         super().__init__(parent=parent)
+
+        self._number = number
 
         self.setZValue(Z.NEW_MANUAL_ELEMENT_PIN)
         self.setPos(pos)
 
         self._items_info = []
         self._add_ellipses(scale_factor)
+
+    @property
+    def number(self):
+        return self._number
 
     def boundingRect(self):
         return self.childrenBoundingRect()
