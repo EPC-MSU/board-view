@@ -21,6 +21,7 @@ if __name__ == "__main__":
 
     def on_click(number: int):
         print(number, " clicked!")
+        widget.select_pin(number)
 
     widget.on_pin.connect(on_click)
 

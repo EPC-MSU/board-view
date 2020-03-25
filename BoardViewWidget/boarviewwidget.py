@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QBrush, QColor, QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QFrame, QGraphicsScene
+from typing import Optional, Dict
 from .pin import GraphicsManualPinItem
 
 
@@ -16,7 +17,8 @@ class BoardView(QGraphicsView):
         self._start_pos = None
         self._drag = False
         self._scale = 1.0
-        self._pins = []
+        self._pins: Dict[int, GraphicsManualPinItem] = dict()
+        self._selected_pin: Optional[int] = None
 
         scene = QGraphicsScene()
         scene.addPixmap(image)
@@ -42,7 +44,8 @@ class BoardView(QGraphicsView):
     def add_pin(self, pin: QPoint, number: int):
         item = GraphicsManualPinItem(pin, 1.0 / self._scale * 4.0, number)
         self.board_scene().addItem(item)
-        self._pins.append(item)
+
+        self._pins[number] = item
 
     def __map_length_to_scene(self, length):
         point1, point2 = QPoint(0, 0), QPoint(0, length)
@@ -82,7 +85,7 @@ class BoardView(QGraphicsView):
 
         self._scale *= zoom_factor
 
-        for item in self._pins:
+        for item in self._pins.values():
             item.update_scale(1.0 / self._scale * 4.0)
 
     def mousePressEvent(self, event):
@@ -109,3 +112,13 @@ class BoardView(QGraphicsView):
         if event.button() & Qt.LeftButton:
             self.setDragMode(QGraphicsView.NoDrag)
             self._drag = False
+
+    def select_pin(self, number: Optional[int] = None):
+        self._selected_pin = number
+        for pin in self._pins.values():
+            pin.select(False)
+        if number is not None:
+            self._pins[number].select(True)
+
+    def selected_pin(self) -> Optional[int]:
+        return self._selected_pin
