@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsEllipseItem
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import QRectF, QPointF
 from PyQt5.QtGui import QPen, QBrush
 from .pen import Pen
 
@@ -22,7 +22,7 @@ class _PinItemInfo:
 
 
 class GraphicsManualPinItem(QGraphicsItem):
-    def __init__(self, pos, scale_factor, number: int, parent=None):
+    def __init__(self, pos: QPointF, scale_factor: float, number: int, parent=None):
         super().__init__(parent=parent)
 
         self._number = number
@@ -45,6 +45,9 @@ class GraphicsManualPinItem(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         pass
+
+    def set_pos(self, new_pos: QPointF):
+        self.setPos(new_pos)
 
     def select(self, is_selected: bool):
         if self._selected == is_selected:
