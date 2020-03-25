@@ -12,6 +12,7 @@ class BoardView(QGraphicsView):
     on_pin_left_click = QtCore.pyqtSignal(int)
     on_pin_right_click = QtCore.pyqtSignal(int)
     on_right_click = QtCore.pyqtSignal(QPointF)
+    on_middle_click = QtCore.pyqtSignal()
 
     def __init__(self, image: QPixmap, parent=None) -> None:
         super().__init__(parent)
@@ -43,12 +44,6 @@ class BoardView(QGraphicsView):
 
     def board_scene(self) -> QGraphicsScene:
         return self.__board_scene
-
-    def remove_pin(self, number: int):
-        if number not in self._pins:
-            raise ValueError(f"Nu such pin: {number}")
-        self.__board_scene.removeItem(self._pins[number])
-        del self._pins[number]
 
     def add_pin(self, pin: QPointF, number: int):
         if number in self._pins:
@@ -125,6 +120,9 @@ class BoardView(QGraphicsView):
 
             self.on_right_click.emit(self.mapToScene(event.pos()))
 
+        if event.button() & Qt.MiddleButton:
+            self.on_middle_click.emit()
+
     def mouseMoveEvent(self, event):
         if self._drag:
             delta = self.mapToScene(event.pos()) - self._start_pos
@@ -147,3 +145,6 @@ class BoardView(QGraphicsView):
 
     def selected_pin(self) -> Optional[int]:
         return self._selected_pin
+
+    def all_pins(self) -> Dict[int, GraphicsManualPinItem]:
+        return self._pins

@@ -6,7 +6,7 @@ from itertools import count
 
 
 from BoardViewWidget import BoardView
-from JsonStorage import read_pins_from_file
+from JsonStorage import read_pins_from_file, update_points_positions
 
 
 if __name__ == "__main__":
@@ -32,8 +32,13 @@ if __name__ == "__main__":
 
     def on_pin_right_click(number: int):
         print(number, " pin right clicked!")
-        widget.remove_pin(number)
     widget.on_pin_right_click.connect(on_pin_right_click)
+
+    def on_middle_click():
+        print("Save changes")
+        pins = widget.all_pins()
+        update_points_positions("elements.json", pins)
+    widget.on_middle_click.connect(on_middle_click)
 
     widget.show()
 
