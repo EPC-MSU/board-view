@@ -16,7 +16,7 @@ if __name__ == "__main__":
     image = QPixmap("image.png")
     widget = ExtendedScene(image)
 
-    pins_file = "board.json"
+    pins_file = "elements.json"
 
     counter = count()
     for pin in read_pins_from_file(pins_file):

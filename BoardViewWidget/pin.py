@@ -74,7 +74,7 @@ class GraphicsManualPinItem(AbstractComponent):
             info.item.setPen(_map_physical_pen_to_scene(info.pen, self._scale_factor))
 
     def update_scale(self, scale_factor):
-        scale_factor = 4.0 / scale_factor
+        scale_factor = 5.0 / scale_factor
         if self._scale_factor is None:
             self._add_ellipses(scale_factor)
         self._scale_factor = scale_factor
