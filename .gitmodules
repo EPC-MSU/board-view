@@ -1,0 +1,3 @@
+[submodule "vendor/PyQtExtendedScene"]
+	path = vendor/PyQtExtendedScene
+	url = https://github.com/EPC-MSU/PyQtExtendedScene

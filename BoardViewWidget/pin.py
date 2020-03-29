@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QGraphicsEllipseItem
 from PyQt5.QtCore import QRectF, QPointF
 from PyQt5.QtGui import QPen, QBrush
 from .pen import Pen
-from PyQtExtendedScene import AbstractComponent
+from vendor.PyQtExtendedScene.ExtendedScene import AbstractComponent
 
 
 class Z:
