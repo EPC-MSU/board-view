@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import QGraphicsEllipseItem
 from PyQt5.QtCore import QRectF, QPointF
 from PyQt5.QtGui import QPen, QBrush
 from .pen import Pen
+from PyQtExtendedScene import AbstractComponent
 
 
 class Z:
@@ -21,20 +22,19 @@ class _PinItemInfo:
         self.pen = pen
 
 
-class GraphicsManualPinItem(QGraphicsItem):
-    def __init__(self, pos: QPointF, scale_factor: float, number: int, parent=None):
-        super().__init__(parent=parent)
-
-        self._number = number
+class GraphicsManualPinItem(AbstractComponent):
+    def __init__(self, pos: QPointF, number: int):
+        super().__init__()
 
         self.setZValue(Z.NEW_MANUAL_ELEMENT_PIN)
         self.setPos(pos)
 
         self._items_info = []
-        self._add_ellipses(scale_factor)
 
         self._selected = False
-        self._scale_factor = scale_factor
+        self._scale_factor = None
+
+        self._number = number
 
     @property
     def number(self):
@@ -46,13 +46,10 @@ class GraphicsManualPinItem(QGraphicsItem):
     def paint(self, painter, option, widget=None):
         pass
 
-    def set_pos(self, new_pos: QPointF):
-        self.setPos(new_pos)
-
-    def select(self, is_selected: bool):
-        if self._selected == is_selected:
+    def select(self, selected: bool = True):
+        if self._selected == selected:
             return
-        self._selected = is_selected
+        self._selected = selected
         self.redraw()
 
     def _add_ellipses(self, scale_factor):
@@ -77,5 +74,8 @@ class GraphicsManualPinItem(QGraphicsItem):
             info.item.setPen(_map_physical_pen_to_scene(info.pen, self._scale_factor))
 
     def update_scale(self, scale_factor):
+        scale_factor = 4.0 / scale_factor
+        if self._scale_factor is None:
+            self._add_ellipses(scale_factor)
         self._scale_factor = scale_factor
         self.redraw()
