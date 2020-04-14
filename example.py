@@ -5,7 +5,7 @@ import sys
 from itertools import count
 
 
-from vendor.PyQtExtendedScene.ExtendedScene import ExtendedScene
+from PyQtExtendedScene import ExtendedScene
 from BoardViewWidget.pin import GraphicsManualPinItem
 from JsonStorage import read_pins_from_file, update_points_positions
 

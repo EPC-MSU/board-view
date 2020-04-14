@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QGraphicsEllipseItem
 from PyQt5.QtCore import QRectF, QPointF
 from PyQt5.QtGui import QPen, QBrush
 from .pen import Pen
-from vendor.PyQtExtendedScene.ExtendedScene import AbstractComponent
+from PyQtExtendedScene import AbstractComponent
 
 
 class Z:
@@ -39,12 +39,6 @@ class GraphicsManualPinItem(AbstractComponent):
     @property
     def number(self):
         return self._number
-
-    def boundingRect(self):
-        return self.childrenBoundingRect()
-
-    def paint(self, painter, option, widget=None):
-        pass
 
     def select(self, selected: bool = True):
         if self._selected == selected:
