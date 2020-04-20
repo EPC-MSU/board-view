@@ -28,6 +28,8 @@ def convert(path_from: str, path_to: str):
 
     for element in _input["elements"][1:]:
         for pin in element["pins"]:
+            if "comment" not in pin:
+                pin.update({"comment": ""})
             first_element["pins"].append(pin)
 
     with open(path_to, "w", encoding="utf-8") as file:
