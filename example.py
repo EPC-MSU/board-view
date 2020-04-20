@@ -6,8 +6,8 @@ from itertools import count
 
 
 from PyQtExtendedScene import ExtendedScene
-from BoardViewWidget.pin import GraphicsManualPinItem
-from JsonStorage import read_pins_from_file, update_points_positions
+from boardview.BoardViewWidget.pin import GraphicsManualPinItem
+from boardview.JsonStorage import read_pins_from_file, update_points_positions
 
 
 if __name__ == "__main__":
