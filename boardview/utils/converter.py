@@ -8,6 +8,7 @@ def convert(path_from: str, path_to: str):
     * squash all elements to one element
     * replace 'number_points' -> 'n_points'
     * replace 'number_charge_points' -> 'n_charge_points'
+    * add "comment" field if not exists
     :param path_from: path to EyePoint P10 json
     :param path_to: Path to new EyePoint S1 json
     :return: None
@@ -24,12 +25,15 @@ def convert(path_from: str, path_to: str):
             s = s.replace(f, t)
         _input = loads(s)
 
+    for element in _input["elements"]:
+        for pin in element["pins"]:
+            if "comment" not in pin:
+                pin.update({"comment": ""})
+
     first_element = _input["elements"][0]
 
     for element in _input["elements"][1:]:
         for pin in element["pins"]:
-            if "comment" not in pin:
-                pin.update({"comment": ""})
             first_element["pins"].append(pin)
 
     with open(path_to, "w", encoding="utf-8") as file:
