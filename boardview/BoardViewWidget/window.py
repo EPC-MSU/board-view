@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QPointF, pyqtSignal, pyqtSlot
-from QtGui import QPixmap
+from PyQt5.QtGui import QPixmap
 from typing import Optional
 
 from PyQtExtendedScene import ExtendedScene, AbstractComponent
