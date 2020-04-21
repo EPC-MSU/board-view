@@ -7,6 +7,7 @@ from PyQtExtendedScene import AbstractComponent
 
 class Z:
     NEW_MANUAL_ELEMENT_PIN = 22.0
+    SELECTED_ELEMENT_PIN = 23.0
 
 
 def _map_physical_pen_to_scene(pen, scale_factor):
@@ -60,12 +61,18 @@ class GraphicsManualPinItem(AbstractComponent):
         self._items_info.append(_PinItemInfo(item, radius, pen))
 
     def redraw(self):
+        if self._selected:
+            self.setZValue(Z.SELECTED_ELEMENT_PIN)
+        else:
+            self.setZValue(Z.NEW_MANUAL_ELEMENT_PIN)
+
         for info in self._items_info:
             r = self._scale_factor * info.radius
             if self._selected:
                 r *= 2.5
             info.item.setRect(QRectF(-r, -r, r * 2, r * 2))
             info.item.setPen(_map_physical_pen_to_scene(info.pen, self._scale_factor))
+
 
     def update_scale(self, scale_factor):
         scale_factor = 5.0 / scale_factor
