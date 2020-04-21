@@ -25,7 +25,7 @@ class _PinItemInfo:
 
 class GraphicsManualPinItem(AbstractComponent):
     def __init__(self, pos: QPointF, number: int):
-        super().__init__()
+        super().__init__(draggable=False)
 
         self.setZValue(Z.NEW_MANUAL_ELEMENT_PIN)
         self.setPos(pos)
