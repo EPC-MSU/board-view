@@ -5,28 +5,24 @@ import sys
 from itertools import count
 
 
-from PyQtExtendedScene import ExtendedScene
 from boardview.BoardViewWidget.pin import GraphicsManualPinItem
 from boardview.JsonStorage import read_pins_from_file, update_points_positions
+from boardview.BoardViewWidget import BoardView
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     image = QPixmap("image.png")
-    widget = ExtendedScene(image)
+    widget = BoardView(image)
 
     pins_file = "elements.json"
 
     counter = count()
-    for pin in read_pins_from_file(pins_file):
-        c = next(counter)
-        widget.add_component(GraphicsManualPinItem(pin, c))
 
-    def on_pin_click(component):
-        if isinstance(component, GraphicsManualPinItem):
-            print(component.number, " pin left clicked!")
-    widget.on_component_left_click.connect(on_pin_click)
+    def on_pin_click(number):
+        print(number, " pin left clicked!")
+    widget.point_selected.connect(on_pin_click)
 
     def on_right_click(point: QPointF):
         print(point, " right clicked!")
@@ -39,11 +35,9 @@ if __name__ == "__main__":
             print(component.number, " pin right clicked!")
     widget.on_component_right_click.connect(on_pin_right_click)
 
-    def on_middle_click():
-        print("Save changes")
-        pins = widget.all_components(GraphicsManualPinItem)
-        update_points_positions(pins_file, {pin.number: pin.pos() for pin in pins})
-    widget.on_middle_click.connect(on_middle_click)
+    def on_moved(num, pos):
+        print("Component ", num, " moved to ", pos)
+    widget.point_moved.connect(on_moved)
 
     widget.show()
 
