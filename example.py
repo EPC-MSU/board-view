@@ -6,7 +6,6 @@ from itertools import count
 
 
 from boardview.BoardViewWidget.pin import GraphicsManualPinItem
-from boardview.JsonStorage import read_pins_from_file, update_points_positions
 from boardview.BoardViewWidget import BoardView
 
 

@@ -73,7 +73,6 @@ class GraphicsManualPinItem(AbstractComponent):
             info.item.setRect(QRectF(-r, -r, r * 2, r * 2))
             info.item.setPen(_map_physical_pen_to_scene(info.pen, self._scale_factor))
 
-
     def update_scale(self, scale_factor):
         scale_factor = 5.0 / scale_factor
         if self._scale_factor is None:
