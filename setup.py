@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 description = "Board view widget for EyePoint"
 
@@ -11,7 +11,7 @@ setup(name='boardview',
       author='EPC MSU',
       author_email='mihalin@physlab.ru',
       license='MIT',
-      packages=['boardview'],
+      packages=find_packages(),
       install_requires=[
             'PyQtExtendedScene',
       ],
