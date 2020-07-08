@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 description = "Board view widget for EyePoint"
 
 setup(name='boardview',
-      version='0.1.0',
+      version='0.1.1',
       description=description,
       long_description=description,
       long_description_content_type="text/markdown",
