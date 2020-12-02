@@ -13,7 +13,7 @@ setup(name='boardview',
       license='MIT',
       packages=find_packages(),
       install_requires=[
-            'PyQtExtendedScene',
+            'PyQtExtendedScene==1.0.12',
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
