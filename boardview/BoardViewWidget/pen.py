@@ -9,9 +9,9 @@ def get_pen(color, width=1.0):
     return pen
 
 
-def _get_hslf_color(h, s, l):
+def _get_hslf_color(hue, saturation, lightness):
     color = QColor()
-    color.setHslF(h, s, l)
+    color.setHslF(hue, saturation, lightness)
     return color
 
 
