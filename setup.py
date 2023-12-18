@@ -1,24 +1,21 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-description = "Board view widget for EyePoint"
 
-setup(name='boardview',
-      version='0.1.1',
-      description=description,
-      long_description=description,
-      long_description_content_type="text/markdown",
-      url='https://github.com/EPC-MSU/board-view',
-      author='EPC MSU',
-      author_email='mihalin@physlab.ru',
-      license='MIT',
+setup(name="boardview",
+      version="0.1.1",
+      description="Board view widget for EyePoint",
+      url="https://github.com/EPC-MSU/board-view",
+      author="EPC MSU",
+      author_email="info@physlab.ru",
+      license="MIT",
       packages=find_packages(),
+      python_requires=">=3.6",
       install_requires=[
-            'PyQtExtendedScene==1.0.12',
+            "PyQtExtendedScene==1.0.12",
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: MIT License",
             "Operating System :: OS Independent",
       ],
-      python_requires='>=3.6',
       zip_safe=False)
