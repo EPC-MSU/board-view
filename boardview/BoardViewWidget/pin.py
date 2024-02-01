@@ -57,6 +57,12 @@ class GraphicsManualPinItem(AbstractComponent):
         self._add_ellipse(Pen.pin_point_radius, scale_factor, Pen.get_pin_pen(), True)
         self._add_ellipse(Pen.pin_inner_radius, scale_factor, Pen.get_purple_pen())
 
+    def decrement_number(self) -> None:
+        self._number -= 1
+
+    def increment_number(self) -> None:
+        self._number += 1
+
     def redraw(self) -> None:
         if self._selected:
             self.setZValue(Z.SELECTED_ELEMENT_PIN)

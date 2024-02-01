@@ -15,7 +15,7 @@ def on_point_left_click(number: int) -> None:
     print(f"Point #{number} selected")
 
 
-def on_point_right_click(component):
+def on_point_right_click(component) -> None:
     if isinstance(component, GraphicsManualPinItem):
         print(f"Point #{component.number} right clicked")
 
@@ -32,6 +32,7 @@ if __name__ == "__main__":
     counter = count()
     image = QPixmap("example/image.png")
     widget = BoardView(image)
+    widget.setWindowTitle("board-view example")
     widget.on_component_right_click.connect(on_point_right_click)
     widget.on_right_click.connect(on_right_click)
     widget.point_moved.connect(on_moved)

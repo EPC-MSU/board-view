@@ -10,9 +10,7 @@ setup(name="boardview",
       license="MIT",
       packages=find_packages(),
       python_requires=">=3.6",
-      install_requires=[
-            "PyQtExtendedScene==1.0.12",
-      ],
+      install_requires=[],
       classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: MIT License",
