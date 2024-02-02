@@ -67,6 +67,7 @@ class BoardView(ExtendedScene):
         for component in self._components:
             if isinstance(component, GraphicsManualPinItem) and component.number == number:
                 self.remove_component(component)
+        self._decrement_point_numbers(number)
 
     def select_point(self, number: int) -> None:
         """
