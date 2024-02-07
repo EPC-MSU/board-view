@@ -1,17 +1,16 @@
-from json import dumps, loads
 from argparse import ArgumentParser
+from json import dumps, loads
 
 
-def convert(path_from: str, path_to: str):
+def convert(path_from: str, path_to: str) -> None:
     """
-    Convert EyePoint P10 json to EyePoint S1 json
-    * squash all elements to one element
-    * replace 'number_points' -> 'n_points'
-    * replace 'number_charge_points' -> 'n_charge_points'
-    * add "comment" field if not exists
-    :param path_from: path to EyePoint P10 json
-    :param path_to: Path to new EyePoint S1 json
-    :return: None
+    Convert EyePoint P10 json to EyePoint S1 json:
+    * squash all elements to one element;
+    * replace 'number_points' -> 'n_points';
+    * replace 'number_charge_points' -> 'n_charge_points';
+    * add "comment" field if not exists.
+    :param path_from: path to EyePoint P10 json;
+    :param path_to: path to new EyePoint S1 json.
     """
 
     replace = {

@@ -17,7 +17,7 @@ class BoardView(ExtendedScene):
         :param parent: parent widget.
         """
 
-        super(BoardView, self).__init__(background, zoom_speed, parent)
+        super().__init__(background, zoom_speed, parent)
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 

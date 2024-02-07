@@ -10,7 +10,9 @@ setup(name="boardview",
       license="MIT",
       packages=find_packages(),
       python_requires=">=3.6",
-      install_requires=[],
+      install_requires=[
+            "PyQt5>=5.8.2, <=5.15.0"
+      ],
       classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: MIT License",

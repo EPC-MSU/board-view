@@ -1,4 +1,4 @@
 PyQt5==5.15.0
 PyQt5-sip==12.8.1
-# PyQtExtendedScene==1.0.12
-git+https://github.com/EPC-MSU/PyQtExtendedScene@t-89686#egg=pyqtextendedscene
+# PyQtExtendedScene==1.0.13
+git+https://github.com/EPC-MSU/PyQtExtendedScene@v1.0.13#egg=pyqtextendedscene
