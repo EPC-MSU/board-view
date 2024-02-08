@@ -17,3 +17,9 @@
    python example.py
    ```
 
+3. Запустите тесты:
+
+   ```bash
+   python -m unittest discover -v
+   ```
+

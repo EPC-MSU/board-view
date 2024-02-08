@@ -11,7 +11,8 @@ setup(name="boardview",
       packages=find_packages(),
       python_requires=">=3.6",
       install_requires=[
-            "PyQt5>=5.8.2, <=5.15.0"
+            "PyQt5>=5.8.2, <=5.15.0",
+            "PyQtExtendedScene==1.0.14"
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
