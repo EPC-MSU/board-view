@@ -1,7 +1,7 @@
 import os
 import sys
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
 from epcore.elements import Board
@@ -33,10 +33,9 @@ def create_board_view_from_board(board: Board) -> BoardView:
             y_min, y_max = None, None
 
         if x_min is not None:
-            element_item = ElementItem()
-            element_item.set_rect(QRectF(0, 0, x_max - x_min, y_max - y_min))
+            element_item = ElementItem(QRectF(0, 0, x_max - x_min, y_max - y_min))
             element_item.setPos(x_min, y_min)
-            pins = [[pin.x, pin.y] for pin in element.pins]
+            pins = [QPointF(pin.x, pin.y) for pin in element.pins]
             element_item.add_pins(pins)
 
             board_view.add_component(element_item)
