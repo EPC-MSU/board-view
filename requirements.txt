@@ -1,4 +1,4 @@
 PyQt5==5.15.0
 PyQt5-sip==12.8.1
-git+https://github.com/EPC-MSU/epcore@dev-0.1#egg=epcore
+git+https://gitlab.ximc.ru/eyepoint/epcore@dev-0.1#egg=epcore
 git+https://github.com/EPC-MSU/PyQtExtendedScene@t-105103#egg=PyQtExtendedScene

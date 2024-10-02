@@ -2,12 +2,11 @@ import os
 import sys
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import QPixmap, QColor
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
 from epcore.elements import Board
 from epcore.filemanager import load_board_from_ufiv
-from PyQtExtendedScene import ScalableComponent
-from boardview import BoardView
+from boardview import BoardView, ElementItem
 
 
 def create_board_view_from_board(board: Board) -> BoardView:
@@ -24,28 +23,23 @@ def create_board_view_from_board(board: Board) -> BoardView:
             y_coords = [y for y, _ in element.bounding_zone]
             x_min, x_max = min(x_coords), max(x_coords)
             y_min, y_max = min(y_coords), max(y_coords)
-            color = None
         elif element.width is not None and element.height is not None and element.center:
-            print("___")
-            x_min = element.center[0] - element.width / 2
-            x_max = x_min + element.width
-            y_min = element.center[1] - element.height / 2
-            y_max = y_min + element.height
-            color = QColor("red")
+            x_min = element.center[0] - element.height / 2
+            x_max = x_min + element.height
+            y_min = element.center[1] - element.width / 2
+            y_max = y_min + element.width
         else:
             x_min, x_max = None, None
             y_min, y_max = None, None
 
-        if not element.bounding_zone:
-            print(element.name, element.width, element.height, element.center)
-            print(element)
-
-
         if x_min is not None:
-            rect = QRectF(0, 0, x_max - x_min, y_max - y_min)
-            rect_item = ScalableComponent(rect, color)
-            rect_item.setPos(x_min, y_min)
-            board_view.add_component(rect_item)
+            element_item = ElementItem()
+            element_item.set_rect(QRectF(0, 0, x_max - x_min, y_max - y_min))
+            element_item.setPos(x_min, y_min)
+            pins = [[pin.x, pin.y] for pin in element.pins]
+            element_item.add_pins(pins)
+
+            board_view.add_component(element_item)
     return board_view
 
 
