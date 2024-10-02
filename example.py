@@ -34,7 +34,7 @@ if __name__ == "__main__":
     widget = BoardView(image)
     widget.setWindowTitle("board-view example")
     widget.on_component_right_click.connect(on_point_right_click)
-    widget.on_right_click.connect(on_right_click)
+    widget.right_clicked.connect(on_right_click)
     widget.point_moved.connect(on_moved)
     widget.point_selected.connect(on_point_left_click)
     widget.show()

@@ -1,6 +1,7 @@
 from typing import Optional
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QGraphicsItem
 from PyQtExtendedScene import AbstractComponent, ExtendedScene
 from .pin import GraphicsManualPinItem
 
@@ -21,12 +22,12 @@ class BoardView(ExtendedScene):
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
-    @pyqtSlot(AbstractComponent)
+    @pyqtSlot(QGraphicsItem)
     def __component_moved(self, component: AbstractComponent) -> None:
         if isinstance(component, GraphicsManualPinItem):
             self.point_moved.emit(component.number, component.pos())
 
-    @pyqtSlot(AbstractComponent)
+    @pyqtSlot(QGraphicsItem)
     def __component_selected(self, component: AbstractComponent) -> None:
         if isinstance(component, GraphicsManualPinItem):
             self.point_selected.emit(component.number)
