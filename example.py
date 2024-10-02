@@ -3,8 +3,7 @@ from itertools import count
 from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication
-from boardview.BoardViewWidget import BoardView
-from boardview.BoardViewWidget.pin import GraphicsManualPinItem
+from boardview import BoardView, GraphicsManualPinItem
 
 
 def on_moved(number: int, pos: QPointF) -> None:
