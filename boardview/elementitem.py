@@ -3,6 +3,7 @@ from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QStyle, QStyleOptionGraphicsItem, QWidget
 from PyQtExtendedScene import ComponentGroup, PointComponent, ScalableComponent
+from .textitem import TextItem
 
 
 class ElementItem(ComponentGroup):
@@ -20,7 +21,13 @@ class ElementItem(ComponentGroup):
         self._name: str = name
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
         self.addToGroup(self._rect_item)
+        self._text_item: TextItem = self._create_text_item()
+        self.addToGroup(self._text_item)
         self._selection_signal.connect(self._set_selection_from_group_to_rect)
+
+    def _create_text_item(self) -> TextItem:
+        text_item = TextItem(self._name)
+        return text_item
 
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         self._rect_item.set_selected_at_group(selected)
