@@ -11,25 +11,31 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
-    def __init__(self, rect: QRectF, name: str) -> None:
+    Z_PIN: float = 2
+    Z_RECT: float = 1
+    Z_TEXT: float = 3
+
+    def __init__(self, name: str, rect: QRectF) -> None:
         """
-        :param rect: element borders;
-        :param name: element name.
+        :param name: element name;
+        :param rect: element borders.
         """
 
         super().__init__(False, True)
         self._name: str = name
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
+        self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
-        self._text_item: TextItem = self._create_text_item()
+        self._text_item: TextItem = TextItem(self._name, rect)
+        self._text_item.setZValue(ElementItem.Z_TEXT)
         self.addToGroup(self._text_item)
         self._selection_signal.connect(self._set_selection_from_group_to_rect)
 
-    def _create_text_item(self) -> TextItem:
-        text_item = TextItem(self._name)
-        return text_item
-
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
+        """
+        :param selected: if True, then the element is selected.
+        """
+
         self._rect_item.set_selected_at_group(selected)
 
     def add_pins(self, pins: List[QPointF]) -> None:
@@ -40,6 +46,7 @@ class ElementItem(ComponentGroup):
         for point in pins:
             pin_item = PointComponent()
             pin_item.setPos(point)
+            pin_item.setZValue(ElementItem.Z_PIN)
             self.addToGroup(pin_item)
 
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
