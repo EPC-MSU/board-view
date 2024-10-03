@@ -11,9 +11,9 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
+    Z_NAME: float = 3
     Z_PIN: float = 2
     Z_RECT: float = 1
-    Z_TEXT: float = 3
 
     def __init__(self, name: str, rect: QRectF) -> None:
         """
@@ -23,12 +23,12 @@ class ElementItem(ComponentGroup):
 
         super().__init__(False, True)
         self._name: str = name
+        self._name_item: NameItem = NameItem(self._name, rect)
+        self._name_item.setZValue(ElementItem.Z_NAME)
+        self.addToGroup(self._name_item)
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
         self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
-        self._text_item: NameItem = NameItem(self._name, rect)
-        self._text_item.setZValue(ElementItem.Z_TEXT)
-        self.addToGroup(self._text_item)
         self._selection_signal.connect(self._set_selection_from_group_to_rect)
 
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
@@ -54,7 +54,7 @@ class ElementItem(ComponentGroup):
         :param event: hover event.
         """
 
-        self._text_item.setOpacity(0)
+        self._name_item.setOpacity(0)
         super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
@@ -62,7 +62,7 @@ class ElementItem(ComponentGroup):
         :param event: hover event.
         """
 
-        self._text_item.setOpacity(1)
+        self._name_item.setOpacity(1)
         super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
@@ -77,3 +77,13 @@ class ElementItem(ComponentGroup):
         if option.state & QStyle.State_Selected:
             option.state &= not QStyle.State_Selected
         super().paint(painter, option, widget)
+
+    def show_element_name(self, show: bool) -> None:
+        """
+        :param show: if True, then need to show the element name.
+        """
+
+        if show:
+            self._name_item.show()
+        else:
+            self._name_item.hide()

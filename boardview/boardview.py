@@ -3,6 +3,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
 from PyQtExtendedScene import AbstractComponent, ExtendedScene
+from .elementitem import ElementItem
 from .pin import GraphicsManualPinItem
 
 
@@ -19,6 +20,7 @@ class BoardView(ExtendedScene):
         """
 
         super().__init__(background, zoom_speed, parent)
+        self._element_names_to_show: bool = True
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
@@ -50,6 +52,24 @@ class BoardView(ExtendedScene):
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.increment_number()
 
+    def _show_element_names(self, show: bool) -> None:
+        """
+        :param show: if True, then need to show the element names.
+        """
+
+        self._element_names_to_show = show
+        for element in self._components:
+            if isinstance(element, ElementItem):
+                element.show_element_name(show)
+
+    def add_element_item(self, element_item: ElementItem) -> None:
+        """
+        :param element_item: element item to be added to the board view.
+        """
+
+        element_item.show_element_name(self._element_names_to_show)
+        self.add_component(element_item)
+
     def add_point(self, pos: QPointF, number: int) -> None:
         """
         :param pos: point position;
@@ -59,6 +79,9 @@ class BoardView(ExtendedScene):
         self._increment_point_numbers(number)
         item = GraphicsManualPinItem(pos, number)
         self.add_component(item)
+
+    def hide_element_names(self) -> None:
+        self._show_element_names(False)
 
     def remove_point(self, number: int) -> None:
         """
@@ -82,3 +105,6 @@ class BoardView(ExtendedScene):
                 return
 
         raise ValueError("No such pin " + str(number))
+
+    def show_element_names(self) -> None:
+        self._show_element_names(True)

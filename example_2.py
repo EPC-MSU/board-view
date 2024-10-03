@@ -38,7 +38,7 @@ def create_board_view_from_board(board: Board) -> BoardView:
             pins = [QPointF(pin.x, pin.y) for pin in element.pins]
             element_item.add_pins(pins)
 
-            board_view.add_component(element_item)
+            board_view.add_element_item(element_item)
     return board_view
 
 
