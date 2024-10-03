@@ -1,7 +1,7 @@
 from typing import List, Optional
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QStyle, QStyleOptionGraphicsItem, QWidget
+from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
 from PyQtExtendedScene import ComponentGroup, PointComponent, ScalableComponent
 from .textitem import TextItem
 
@@ -41,6 +41,22 @@ class ElementItem(ComponentGroup):
             pin_item = PointComponent()
             pin_item.setPos(point)
             self.addToGroup(pin_item)
+
+    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+        """
+        :param event: hover event.
+        """
+
+        self._text_item.setOpacity(0)
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+        """
+        :param event: hover event.
+        """
+
+        self._text_item.setOpacity(1)
+        super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
         """
