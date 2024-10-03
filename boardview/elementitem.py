@@ -3,7 +3,7 @@ from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
 from PyQtExtendedScene import ComponentGroup, PointComponent, ScalableComponent
-from .textitem import TextItem
+from .nameitem import NameItem
 
 
 class ElementItem(ComponentGroup):
@@ -26,7 +26,7 @@ class ElementItem(ComponentGroup):
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
         self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
-        self._text_item: TextItem = TextItem(self._name, rect)
+        self._text_item: NameItem = NameItem(self._name, rect)
         self._text_item.setZValue(ElementItem.Z_TEXT)
         self.addToGroup(self._text_item)
         self._selection_signal.connect(self._set_selection_from_group_to_rect)
