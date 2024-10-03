@@ -10,15 +10,17 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
-    def __init__(self, rect: QRectF) -> None:
+    def __init__(self, rect: QRectF, name: str) -> None:
         """
-        :param rect: element borders.
+        :param rect: element borders;
+        :param name: element name.
         """
 
         super().__init__(False, True)
-        self._selection_signal.connect(self._set_selection_from_group_to_rect)
+        self._name: str = name
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
         self.addToGroup(self._rect_item)
+        self._selection_signal.connect(self._set_selection_from_group_to_rect)
 
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         self._rect_item.set_selected_at_group(selected)

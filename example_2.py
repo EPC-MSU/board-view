@@ -33,7 +33,7 @@ def create_board_view_from_board(board: Board) -> BoardView:
             y_min, y_max = None, None
 
         if x_min is not None:
-            element_item = ElementItem(QRectF(0, 0, x_max - x_min, y_max - y_min))
+            element_item = ElementItem(QRectF(0, 0, x_max - x_min, y_max - y_min), element.name)
             element_item.setPos(x_min, y_min)
             pins = [QPointF(pin.x, pin.y) for pin in element.pins]
             element_item.add_pins(pins)
