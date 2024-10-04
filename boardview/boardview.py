@@ -68,9 +68,9 @@ class BoardView(ExtendedScene):
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.increment_number()
 
-    def _show_element_names(self, show: bool) -> None:
+    def _show_element_descriptions(self, show: bool) -> None:
         """
-        :param show: if True, then need to show the element names.
+        :param show: if True, then need to show the element descriptions.
         """
 
         self._element_names_to_show = show
@@ -96,8 +96,8 @@ class BoardView(ExtendedScene):
         item = GraphicsManualPinItem(pos, number)
         self.add_component(item)
 
-    def hide_element_names(self) -> None:
-        self._show_element_names(False)
+    def hide_element_descriptions(self) -> None:
+        self._show_element_descriptions(False)
 
     def remove_point(self, number: int) -> None:
         """
@@ -129,15 +129,15 @@ class BoardView(ExtendedScene):
 
         if mode is SceneMode.NO_ACTION:
             if self._element_names_to_show_backup:
-                self.show_element_names()
+                self.show_element_descriptions()
             else:
-                self.hide_element_names()
+                self.hide_element_descriptions()
         else:
             if self._mode is SceneMode.NO_ACTION:
                 self._element_names_to_show_backup = self._element_names_to_show
-            self.hide_element_names()
+            self.hide_element_descriptions()
 
         super().set_scene_mode(mode)
 
-    def show_element_names(self) -> None:
-        self._show_element_names(True)
+    def show_element_descriptions(self) -> None:
+        self._show_element_descriptions(True)
