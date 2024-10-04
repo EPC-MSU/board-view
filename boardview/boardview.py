@@ -5,11 +5,15 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
 from PyQtExtendedScene import AbstractComponent, ExtendedScene
+from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .pin import GraphicsManualPinItem
 
 
 class BoardView(ExtendedScene):
+    """
+    Class for displaying the board.
+    """
 
     point_moved = pyqtSignal(int, QPointF)
     point_selected = pyqtSignal(int)
@@ -32,6 +36,7 @@ class BoardView(ExtendedScene):
 
         super().__init__(background, zoom_speed, parent)
         self._element_names_to_show: bool = True
+        self._element_names_to_show_backup: bool = self._element_names_to_show
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
@@ -116,6 +121,23 @@ class BoardView(ExtendedScene):
                 return
 
         raise ValueError("No such pin " + str(number))
+
+    def set_scene_mode(self, mode: SceneMode) -> None:
+        """
+        :param mode: new scene mode.
+        """
+
+        if mode is SceneMode.NO_ACTION:
+            if self._element_names_to_show_backup:
+                self.show_element_names()
+            else:
+                self.hide_element_names()
+        else:
+            if self._mode is SceneMode.NO_ACTION:
+                self._element_names_to_show_backup = self._element_names_to_show
+            self.hide_element_names()
+
+        super().set_scene_mode(mode)
 
     def show_element_names(self) -> None:
         self._show_element_names(True)

@@ -43,7 +43,9 @@ class Dialog(QDialog):
             mode = SceneMode.EDIT_GROUP
         else:
             mode = SceneMode.NO_ACTION
-        self.board_view.set_scene_mode(mode)
+
+        if self.sender().isChecked():
+            self.board_view.set_scene_mode(mode)
 
 
 if __name__ == "__main__":
