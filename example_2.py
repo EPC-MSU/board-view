@@ -26,8 +26,8 @@ def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None) ->
 
     for element in board.elements:
         if element.bounding_zone:
-            x_coords = [x for _, x in element.bounding_zone]
-            y_coords = [y for y, _ in element.bounding_zone]
+            x_coords = [x for x, _ in element.bounding_zone]
+            y_coords = [y for _, y in element.bounding_zone]
             x_min, x_max = min(x_coords), max(x_coords)
             y_min, y_max = min(y_coords), max(y_coords)
         elif element.width is not None and element.height is not None and element.center:
