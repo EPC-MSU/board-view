@@ -1,4 +1,6 @@
-from typing import Optional
+from typing import Optional, Union
+from PIL.Image import Image
+from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
@@ -12,12 +14,21 @@ class BoardView(ExtendedScene):
     point_moved = pyqtSignal(int, QPointF)
     point_selected = pyqtSignal(int)
 
-    def __init__(self, background: Optional[QPixmap] = None, zoom_speed: float = 0.001, parent=None) -> None:
+    def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
+                 parent=None) -> None:
         """
         :param background: background image;
         :param zoom_speed: zoom speed;
         :param parent: parent widget.
         """
+
+        if isinstance(background, Image):
+            self.__image: Image = background
+            background = ImageQt(background)
+
+        if isinstance(background, ImageQt):
+            self.__q_image: ImageQt = background
+            background = QPixmap.fromImage(background)
 
         super().__init__(background, zoom_speed, parent)
         self._element_names_to_show: bool = True

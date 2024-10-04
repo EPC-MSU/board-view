@@ -1,8 +1,6 @@
 import os
 from typing import Optional
-from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import QPixmap
 from epcore.elements import Board
 from boardview import BoardView, ElementItem
 
@@ -14,12 +12,7 @@ def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None) ->
     :return: widget that displays the board.
     """
 
-    if board.image:
-        board.image = ImageQt(board.image)
-        board_pixmap = QPixmap.fromImage(board.image)
-    else:
-        board_pixmap = None
-    board_view = BoardView(board_pixmap)
+    board_view = BoardView(board.image)
 
     for element in board.elements:
         if element.bounding_zone:
@@ -47,4 +40,5 @@ def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None) ->
                 element_item.set_element_description(svg_file, element.rotation)
 
             board_view.add_element_item(element_item)
+
     return board_view
