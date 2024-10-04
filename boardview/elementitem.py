@@ -3,7 +3,7 @@ from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
 from PyQtExtendedScene import ComponentGroup, PointComponent, ScalableComponent
-from .nameitem import NameItem
+from .descriptionitem import DescriptionItem
 
 
 class ElementItem(ComponentGroup):
@@ -11,25 +11,26 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
-    Z_NAME: float = 3
+    Z_DESCRIPTION: float = 3
     Z_PIN: float = 2
     Z_RECT: float = 1
 
-    def __init__(self, name: str, rect: QRectF) -> None:
+    def __init__(self, rect: QRectF, name: str) -> None:
         """
-        :param name: element name;
-        :param rect: element borders.
+        :param rect: element borders;
+        :param name: element name.
         """
 
         super().__init__(False, True)
+        self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        self._name_item: NameItem = NameItem(self._name, rect)
-        self._name_item.setZValue(ElementItem.Z_NAME)
-        self.addToGroup(self._name_item)
+        self._rect: QRectF = rect
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
         self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
+
         self._selection_signal.connect(self._set_selection_from_group_to_rect)
+        self.set_element_description()
 
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         """
@@ -54,7 +55,7 @@ class ElementItem(ComponentGroup):
         :param event: hover event.
         """
 
-        self._name_item.setOpacity(0)
+        self._description_item.setOpacity(0)
         super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
@@ -62,7 +63,7 @@ class ElementItem(ComponentGroup):
         :param event: hover event.
         """
 
-        self._name_item.setOpacity(1)
+        self._description_item.setOpacity(1)
         super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
@@ -78,12 +79,30 @@ class ElementItem(ComponentGroup):
             option.state &= not QStyle.State_Selected
         super().paint(painter, option, widget)
 
+    def set_element_description(self, svg_file: Optional[str] = None, rotation: Optional[int] = None) -> None:
+        """
+        :param svg_file: path to the svg file with the ideal display of the element;
+        :param rotation: each automatically recognized PCB component can be placed on the board in 4 different
+        rotations - each one by additional 90 degrees from the original. This parameter is required for correct
+        placement of component and its picture.
+        """
+
+        if self._description_item:
+            self.removeFromGroup(self._description_item)
+            if self.scene():
+                self.scene().removeItem(self._description_item)
+
+        self._description_item = DescriptionItem(self._rect, name=self._name, svg_file=svg_file, rotation=rotation)
+        self._description_item.setZValue(ElementItem.Z_DESCRIPTION)
+        self._description_item.setPos(self.pos())
+        self.addToGroup(self._description_item)
+
     def show_element_name(self, show: bool) -> None:
         """
         :param show: if True, then need to show the element name.
         """
 
         if show:
-            self._name_item.show()
+            self._description_item.show()
         else:
-            self._name_item.hide()
+            self._description_item.hide()

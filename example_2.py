@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Optional
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPixmap
@@ -9,7 +10,13 @@ from epcore.filemanager import load_board_from_ufiv
 from boardview import BoardView, ElementItem
 
 
-def create_board_view_from_board(board: Board) -> BoardView:
+def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None) -> BoardView:
+    """
+    :param board: epcore board to display;
+    :param svg_dir: path to the folder with svg images of famous elements.
+    :return: widget that displays the board.
+    """
+
     if board.image:
         board.image = ImageQt(board.image)
         board_pixmap = QPixmap.fromImage(board.image)
@@ -33,10 +40,14 @@ def create_board_view_from_board(board: Board) -> BoardView:
             y_min, y_max = None, None
 
         if x_min is not None:
-            element_item = ElementItem(element.name, QRectF(0, 0, x_max - x_min, y_max - y_min))
+            element_item = ElementItem(QRectF(0, 0, x_max - x_min, y_max - y_min), element.name)
             element_item.setPos(x_min, y_min)
             pins = [QPointF(pin.x, pin.y) for pin in element.pins]
             element_item.add_pins(pins)
+
+            svg_file = os.path.join(svg_dir, f"{element.name}.svg")
+            if os.path.exists(svg_file):
+                element_item.set_element_description(svg_file, element.rotation)
 
             board_view.add_element_item(element_item)
     return board_view
@@ -45,8 +56,9 @@ def create_board_view_from_board(board: Board) -> BoardView:
 def main() -> None:
     app = QApplication(sys.argv)
 
-    board = load_board_from_ufiv(os.path.join("example_board", "elements.json"))
-    board_view = create_board_view_from_board(board)
+    board_dir = "example_board"
+    board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
+    board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"))
     board_view.show()
 
     app.exec_()
