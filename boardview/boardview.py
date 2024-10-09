@@ -40,7 +40,7 @@ class BoardView(ExtendedScene):
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._view_mode: ViewMode = ViewMode.NO_ACTION
 
-        self._edited_group_component_signal.connect(self._handle_edited_element)
+        self.edited_group_component_signal.connect(self._handle_edited_element)
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
