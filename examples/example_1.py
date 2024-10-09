@@ -2,7 +2,13 @@ import os
 import sys
 from PyQt5.QtWidgets import QApplication
 from epcore.filemanager import load_board_from_ufiv
-from boardview.tools.epcorecreator import create_board_view_from_board
+
+
+try:
+    from boardview.tools.epcorecreator import create_board_view_from_board
+except ImportError:
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from boardview.tools.epcorecreator import create_board_view_from_board
 
 
 def main() -> None:

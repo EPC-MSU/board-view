@@ -3,8 +3,15 @@ import sys
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout, QRadioButton, QVBoxLayout
 from epcore.filemanager import load_board_from_ufiv
-from boardview.tools.epcorecreator import create_board_view_from_board
-from boardview.viewmode import ViewMode
+
+
+try:
+    from boardview.tools.epcorecreator import create_board_view_from_board
+    from boardview.viewmode import ViewMode
+except ImportError:
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from boardview.tools.epcorecreator import create_board_view_from_board
+    from boardview.viewmode import ViewMode
 
 
 class Dialog(QDialog):
