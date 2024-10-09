@@ -4,7 +4,7 @@ from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQtExtendedScene import AbstractComponent, ExtendedScene, ScalableComponent, PointComponent
+from PyQtExtendedScene import ComponentGroup, ExtendedScene, ScalableComponent, PointComponent
 from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .pin import GraphicsManualPinItem
@@ -40,16 +40,17 @@ class BoardView(ExtendedScene):
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._view_mode: ViewMode = ViewMode.NO_ACTION
 
+        self._edited_group_component_signal.connect(self._handle_edited_element)
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
     @pyqtSlot(QGraphicsItem)
-    def __component_moved(self, component: AbstractComponent) -> None:
+    def __component_moved(self, component: QGraphicsItem) -> None:
         if isinstance(component, GraphicsManualPinItem):
             self.point_moved.emit(component.number, component.pos())
 
     @pyqtSlot(QGraphicsItem)
-    def __component_selected(self, component: AbstractComponent) -> None:
+    def __component_selected(self, component: QGraphicsItem) -> None:
         if isinstance(component, GraphicsManualPinItem):
             self.point_selected.emit(component.number)
 
@@ -91,24 +92,65 @@ class BoardView(ExtendedScene):
             new_pos = get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
             item.setPos(new_pos)
 
+    def _finish_create_scalable_component_by_mouse(self) -> None:
+        for item in self._components_in_operation:
+            if not isinstance(item, PointComponent):
+                continue
+
+            if not self._current_component.contains(self._current_component.mapFromScene(item.pos())):
+                self._scene.removeItem(self._current_component)
+                self._current_component = None
+                return
+
+        super()._finish_create_scalable_component_by_mouse()
+        rect_items = [item for item in self._components_in_operation if isinstance(item, ScalableComponent)]
+        if len(rect_items) == 1:
+            return
+
+        if len(rect_items) == 2:
+            self._components_in_operation.remove(rect_items[0])
+            self.remove_component(rect_items[0])
+
+    def _get_rect_item_from_components_in_operation(self) -> Optional[ScalableComponent]:
+        """
+        :return: rectangular (scalable) component.
+        """
+
+        rect_items = [item for item in self._components_in_operation if isinstance(item, ScalableComponent)]
+        if len(rect_items) > 1:
+            raise RuntimeError(f"Too many ScalableComponents ({len(rect_items)}) in ElementItem")
+
+        if not rect_items:
+            return None
+
+        return rect_items[0]
+
     def _handle_component_drag_by_mouse_in_edit_group_mode(self, event: QMouseEvent) -> None:
         """
         :param event: mouse event.
         """
 
-        rect_item = None
-        for item in self._components_in_operation:
-            if isinstance(item, ScalableComponent):
-                rect_item = item
-                break
-
-        if rect_item is None:
-            raise RuntimeError("ElementItem without ScalableComponent")
+        rect_item = self._get_rect_item_from_components_in_operation()
 
         if rect_item not in self._scene.selectedItems():
             self._drag_point_components_in_element_item(event, rect_item)
         else:
             self._drag_rect_component_in_element_item(event, rect_item)
+
+    @pyqtSlot(QGraphicsItem)
+    def _handle_edited_element(self, item: QGraphicsItem) -> None:
+        """
+        :param item: group component after editing.
+        """
+
+        if isinstance(item, ElementItem):
+            item.adjust_element_description()
+        elif isinstance(item, ComponentGroup):
+            element_item = ElementItem.create_from_component_group(item, "new_name")
+            self.remove_component(item)
+            for child_item in item.childItems():
+                self._scene.removeItem(child_item)
+            self.add_component(element_item)
 
     def _increment_point_numbers(self, start_number: int) -> None:
         """
@@ -119,15 +161,6 @@ class BoardView(ExtendedScene):
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.increment_number()
 
-    def _set_no_action_mode(self) -> None:
-        if self._view_mode is ViewMode.EDIT and isinstance(self._group, ElementItem):
-            self._group.adjust_element_description()
-
-        if self._element_names_to_show_backup:
-            self.show_element_descriptions()
-        else:
-            self.hide_element_descriptions()
-
     def _show_element_descriptions(self, show: bool) -> None:
         """
         :param show: if True, then need to show the element descriptions.
@@ -137,6 +170,17 @@ class BoardView(ExtendedScene):
         for element in self._components:
             if isinstance(element, ElementItem):
                 element.show_element_name(show)
+
+    def _start_create_point_component_by_mouse(self, pos: QPointF) -> None:
+        """
+        :param pos: mouse position.
+        """
+
+        rect_item = self._get_rect_item_from_components_in_operation()
+        if not rect_item or not rect_item.contains(rect_item.mapFromScene(pos)):
+            return
+
+        super()._start_create_point_component_by_mouse(pos)
 
     def add_element_item(self, element_item: ElementItem) -> None:
         """
@@ -208,20 +252,18 @@ class BoardView(ExtendedScene):
         """
 
         if mode is ViewMode.NO_ACTION:
-            self._set_no_action_mode()
+            if self._element_names_to_show_backup:
+                self.show_element_descriptions()
+            else:
+                self.hide_element_descriptions()
         else:
             if self._view_mode is ViewMode.NO_ACTION:
                 self._element_names_to_show_backup = self._element_names_to_show
             self.hide_element_descriptions()
 
-        self._view_mode = mode
-        if self._view_mode is ViewMode.NO_ACTION:
-            scene_mode = SceneMode.NO_ACTION
-        elif not self._scene.selectedItems():
-            scene_mode = SceneMode.EDIT
-        else:
-            scene_mode = SceneMode.EDIT_GROUP
+        scene_mode = SceneMode.NO_ACTION if mode is ViewMode.NO_ACTION else SceneMode.EDIT_GROUP
         self.set_scene_mode(scene_mode)
+        self._view_mode = mode
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
@@ -229,10 +271,11 @@ class BoardView(ExtendedScene):
 
 def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) -> QPointF:
     """
-    :param point:
-    :param rel_point_old:
-    :param rel_point_new:
-    :return:
+    :param point: old point coordinates;
+    :param rel_point_old: old relative point coordinates;
+    :param rel_point_new: new relative point coordinates.
+    :return: new coordinates of the point (the new point is located relative to the new relative point in the same way
+    as the old point is relative to the old relative point).
     """
 
     x = point.x() - rel_point_old.x() + rel_point_new.x()

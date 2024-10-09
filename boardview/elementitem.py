@@ -31,6 +31,19 @@ class ElementItem(ComponentGroup):
         self._selection_signal.connect(self._set_selection_from_group_to_rect)
         self.set_element_description()
 
+    @classmethod
+    def create_from_component_group(cls, item: ComponentGroup, name: str) -> "ElementItem":
+        """
+        :param item: group component from which to create an ElementItem;
+        :param name: element name.
+        :return: new element item.
+        """
+
+        element_item = cls(item.boundingRect(), name)
+        pins = [child_item.pos() for child_item in item.childItems() if isinstance(child_item, PointComponent)]
+        element_item.add_pins(pins)
+        return element_item
+
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         """
         :param selected: if True, then the element is selected.
@@ -50,8 +63,13 @@ class ElementItem(ComponentGroup):
             self.addToGroup(pin_item)
 
     def adjust_element_description(self) -> None:
+        for item in self.childItems():
+            if isinstance(item, ScalableComponent):
+                self._rect_item = item
+                break
+
         self._description_item.adjust_rect(self._rect_item.boundingRect())
-        self._description_item.setPos(self._rect_item.scenePos())
+        self._description_item.setPos(self._rect_item.pos())
 
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         """
