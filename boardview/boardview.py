@@ -1,10 +1,10 @@
 from typing import Optional, Union
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF
+from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQtExtendedScene import AbstractComponent, ExtendedScene
+from PyQtExtendedScene import AbstractComponent, ExtendedScene, ScalableComponent, PointComponent
 from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .pin import GraphicsManualPinItem
@@ -62,6 +62,29 @@ class BoardView(ExtendedScene):
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.decrement_number()
 
+    def _handle_component_drag_by_mouse_in_edit_group_mode(self, event: QMouseEvent) -> None:
+        """
+        :param event: mouse event.
+        """
+
+        rect_item = None
+        for item in self._components_in_operation:
+            if isinstance(item, ScalableComponent):
+                rect_item = item
+                break
+
+        if rect_item is None:
+            raise RuntimeError("ElementItem without ScalableComponent")
+
+        super().mouseMoveEvent(event)
+
+        for item in self._components_in_operation:
+            if isinstance(item, PointComponent):
+                if not rect_item.contains(rect_item.mapFromScene(item.pos())):
+                    pos = get_valid_position_for_point_inside_rect(item.scenePos(),
+                                                                   rect_item.mapRectToScene(rect_item.boundingRect()))
+                    item.setPos(pos)
+
     def _increment_point_numbers(self, start_number: int) -> None:
         """
         :param start_number: number from which to increase component numbers by 1.
@@ -101,6 +124,26 @@ class BoardView(ExtendedScene):
 
     def hide_element_descriptions(self) -> None:
         self._show_element_descriptions(False)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """
+        :param event: mouse event.
+        """
+
+        self._mouse_pos = self.mapToScene(event.pos())
+        if self._operation is ExtendedScene.Operation.CREATE_COMPONENT:
+            self._handle_component_creation_by_mouse()
+            return
+
+        if self._operation is ExtendedScene.Operation.RESIZE_COMPONENT:
+            self._handle_component_resize_by_mouse()
+
+        if self._operation is ExtendedScene.Operation.DRAG_COMPONENT:
+            if self._mode is SceneMode.EDIT_GROUP:
+                self._handle_component_drag_by_mouse_in_edit_group_mode(event)
+                return
+
+        super().mouseMoveEvent(event)
 
     def remove_point(self, number: int) -> None:
         """
@@ -151,3 +194,15 @@ class BoardView(ExtendedScene):
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
+
+
+def get_valid_position_for_point_inside_rect(point: QPointF, rect: QRectF) -> QPointF:
+    """
+    :param point: point coordinates;
+    :param rect: rectangle coordinates.
+    :return: valid position for point inside rectangle.
+    """
+
+    x = min(max(rect.left(), point.x()), rect.right())
+    y = min(max(rect.top(), point.y()), rect.bottom())
+    return QPointF(x, y)
