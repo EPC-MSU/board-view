@@ -8,6 +8,7 @@ from PyQtExtendedScene import AbstractComponent, ExtendedScene
 from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .pin import GraphicsManualPinItem
+from .viewmode import ViewMode
 
 
 class BoardView(ExtendedScene):
@@ -37,6 +38,8 @@ class BoardView(ExtendedScene):
         super().__init__(background, zoom_speed, parent)
         self._element_names_to_show: bool = True
         self._element_names_to_show_backup: bool = self._element_names_to_show
+        self._view_mode: ViewMode = ViewMode.NO_ACTION
+
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
@@ -122,22 +125,29 @@ class BoardView(ExtendedScene):
 
         raise ValueError("No such pin " + str(number))
 
-    def set_scene_mode(self, mode: SceneMode) -> None:
+    def set_view_mode(self, mode: ViewMode) -> None:
         """
-        :param mode: new scene mode.
+        :param mode: new view mode.
         """
 
-        if mode is SceneMode.NO_ACTION:
+        if mode is ViewMode.NO_ACTION:
             if self._element_names_to_show_backup:
                 self.show_element_descriptions()
             else:
                 self.hide_element_descriptions()
         else:
-            if self._mode is SceneMode.NO_ACTION:
+            if self._view_mode is ViewMode.NO_ACTION:
                 self._element_names_to_show_backup = self._element_names_to_show
             self.hide_element_descriptions()
 
-        super().set_scene_mode(mode)
+        self._view_mode = mode
+        if self._view_mode is ViewMode.NO_ACTION:
+            scene_mode = SceneMode.NO_ACTION
+        elif not self._scene.selectedItems():
+            scene_mode = SceneMode.EDIT
+        else:
+            scene_mode = SceneMode.EDIT_GROUP
+        self.set_scene_mode(scene_mode)
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)

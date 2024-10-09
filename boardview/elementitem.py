@@ -102,7 +102,9 @@ class ElementItem(ComponentGroup):
         :param show: if True, then need to show the element name.
         """
 
+        is_selected_before = self.isSelected()
         if show:
             self._description_item.show()
         else:
             self._description_item.hide()
+        self.setSelected(is_selected_before)

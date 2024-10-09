@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout, QRadioButton, QVBoxLayout
 from epcore.filemanager import load_board_from_ufiv
 from boardview.tools.epcorecreator import create_board_view_from_board
-from PyQtExtendedScene.scenemode import SceneMode
+from boardview.viewmode import ViewMode
 
 
 class Dialog(QDialog):
@@ -14,7 +14,7 @@ class Dialog(QDialog):
         self._init_ui()
 
     def _init_ui(self) -> None:
-        board_dir = "example_board"
+        board_dir = "0001_2024_10_07_11-38"
         board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
         self.board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"))
 
@@ -23,12 +23,10 @@ class Dialog(QDialog):
         self.button_no_action.toggled.connect(self._set_mode)
         self.button_edit = QRadioButton("Редактирование")
         self.button_edit.toggled.connect(self._set_mode)
-        self.button_edit_group = QRadioButton("Редактирование составного компонента")
-        self.button_edit_group.toggled.connect(self._set_mode)
+
         h_layout = QHBoxLayout()
         h_layout.addWidget(self.button_no_action)
         h_layout.addWidget(self.button_edit)
-        h_layout.addWidget(self.button_edit_group)
 
         layout = QVBoxLayout()
         layout.addLayout(h_layout)
@@ -38,14 +36,12 @@ class Dialog(QDialog):
     @pyqtSlot()
     def _set_mode(self) -> None:
         if self.sender() == self.button_edit:
-            mode = SceneMode.EDIT
-        elif self.sender() == self.button_edit_group:
-            mode = SceneMode.EDIT_GROUP
+            mode = ViewMode.EDIT
         else:
-            mode = SceneMode.NO_ACTION
+            mode = ViewMode.NO_ACTION
 
         if self.sender().isChecked():
-            self.board_view.set_scene_mode(mode)
+            self.board_view.set_view_mode(mode)
 
 
 if __name__ == "__main__":
