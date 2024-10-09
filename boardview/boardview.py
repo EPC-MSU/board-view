@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import List, Optional, Union
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF
@@ -146,7 +146,8 @@ class BoardView(ExtendedScene):
         if isinstance(item, ElementItem):
             item.adjust_element_description()
         elif isinstance(item, ComponentGroup):
-            element_item = ElementItem.create_from_component_group(item, "new_name")
+            element_name = get_unique_element_name(self._components)
+            element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
             for child_item in item.childItems():
                 self._scene.removeItem(child_item)
@@ -281,6 +282,21 @@ def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) 
     x = point.x() - rel_point_old.x() + rel_point_new.x()
     y = point.y() - rel_point_old.y() + rel_point_new.y()
     return QPointF(x, y)
+
+
+def get_unique_element_name(items: List[QGraphicsItem]) -> str:
+    """
+    :param items: list of ElementItems.
+    :return: a unique name for ElementItem, which is not found in any of the elements from the list.
+    """
+
+    i = 1
+    name = "UserElement_{}"
+    for item in items:
+        if isinstance(item, ElementItem):
+            while item.name == name.format(i):
+                i += 1
+    return name.format(i)
 
 
 def get_valid_position_for_point_inside_rect(point: QPointF, rect: QRectF) -> QPointF:

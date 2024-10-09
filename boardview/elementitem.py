@@ -44,6 +44,14 @@ class ElementItem(ComponentGroup):
         element_item.add_pins(pins)
         return element_item
 
+    @property
+    def name(self) -> str:
+        """
+        :return: element name.
+        """
+
+        return self._name
+
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         """
         :param selected: if True, then the element is selected.
