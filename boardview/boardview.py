@@ -62,25 +62,6 @@ class BoardView(ExtendedScene):
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.decrement_number()
 
-    def _handle_component_drag_by_mouse_in_edit_group_mode(self, event: QMouseEvent) -> None:
-        """
-        :param event: mouse event.
-        """
-
-        rect_item = None
-        for item in self._components_in_operation:
-            if isinstance(item, ScalableComponent):
-                rect_item = item
-                break
-
-        if rect_item is None:
-            raise RuntimeError("ElementItem without ScalableComponent")
-
-        if rect_item not in self._scene.selectedItems():
-            self._drag_point_components_in_element_item(event, rect_item)
-        else:
-            self._drag_rect_component_in_element_item(event, rect_item)
-
     def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: ScalableComponent) -> None:
         """
         :param event: mouse event;
@@ -109,6 +90,25 @@ class BoardView(ExtendedScene):
         for item, pos in points_before.items():
             new_pos = get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
             item.setPos(new_pos)
+
+    def _handle_component_drag_by_mouse_in_edit_group_mode(self, event: QMouseEvent) -> None:
+        """
+        :param event: mouse event.
+        """
+
+        rect_item = None
+        for item in self._components_in_operation:
+            if isinstance(item, ScalableComponent):
+                rect_item = item
+                break
+
+        if rect_item is None:
+            raise RuntimeError("ElementItem without ScalableComponent")
+
+        if rect_item not in self._scene.selectedItems():
+            self._drag_point_components_in_element_item(event, rect_item)
+        else:
+            self._drag_rect_component_in_element_item(event, rect_item)
 
     def _increment_point_numbers(self, start_number: int) -> None:
         """

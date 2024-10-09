@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+    Отчет
+</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" sizes="32x32" href="static/img/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="static/img/favicon-16x16.png">
+        
+    <link rel="stylesheet" href="static/styles/style_for_report.css">
+    <!--[if lte IE 8]><script type="text/javascript" src="static/scripts/excanvas.js"></script><![endif]-->
+    <script type="text/javascript" src="static/scripts/report_script.js"></script>
+    <script type="text/javascript">
+        const PIN_COLORS = {"PinTypes.REFERENCE_EMPTY": "#f0f", "PinTypes.REFERENCE_LOSS": "#ff9900", "PinTypes.REFERENCE_NOT_EMPTY": "#0f0", "PinTypes.TEST_EMPTY": "#f0f", "PinTypes.TEST_HIGH_SCORE": "#f00", "PinTypes.TEST_LOW_SCORE": "#0f0"};
+        const PIN_IMAGE_SIZE = 100;
+    </script>
+
+    </head>
+
+    
+
+
+
+<body onload="change_size()">
+    <div id="wrapper">
+        <h1>
+    Отчет
+</h1>
+        
+    
+    <table id="general_info" cellspacing="0" cellpadding="0">
+        <tbody>
+            <tr>
+                <th>
+                    <h2>Общая информация</h2>
+                </th>
+            </tr>
+
+            <tr>
+                <td class="align_left">
+                    <span>Диагностическая система: EyePoint P10</span><br>
+                    <span>Версия: 1.8.10 (368c53a)</span><br>
+                    <span>Дата: 2024.10.07 11:38:46</span><br>
+                    <span>Рабочая станция: DESKTOP-8K3PB7U</span><br>
+                    <span>Операционная система: Windows 10 64bit</span><br>
+                    <span>Длительность тестирования: 0 мин 12 сек</span><br>
+                    <span>Название платы: 0001_2024_10_07_11-38</span><br>
+                
+        <span>Количество неисправных компонентов/количество компонентов: 0/1</span><br>
+        
+        <span>Доля неисправных компонентов: 0.0%</span><br>
+        <span>Количество неисправных точек тестирования/количество точек тестирования: 0/2</span><br>
+        
+        <span>Доля неисправных точек тестирования: 0.0%</span><br>
+
+                    <span>Допуск: 15.0%</span><br>
+                    <span>HTML: v4.01</span><br>
+                    <span><a href="report_full.html" target="_blank">Просмотреть полный отчет</a></span><br>
+                    <span><a href="full_img.html" target="_blank">Просмотреть изображение платы</a></span><br>
+                </td>
+            </tr>
+
+            <tr>
+                <th>
+                
+                    <h2>Карта неисправных точек тестирования</h2>
+                </th>
+            </tr>
+
+            <tr>
+                <td>
+                    <img id="board" src="static/img/board_with_bad_pins.jpeg" usemap="#map" alt="Карта неисправных точек тестирования" title="Карта неисправных точек тестирования">
+                    <p>
+                        <map name="map">
+                        </map>
+                    </p>
+                    <img id="board_clear" src="static/img/board_clear.jpeg" alt="Изображение платы" title="Изображение платы" style="display: none;">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+        
+    
+        
+
+        
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+</body>
+
+</html>

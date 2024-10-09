@@ -1,0 +1,36 @@
+html {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+div, p {
+	margin: 0;
+	padding: 0;
+}
+
+figure {
+	background-color: white;
+	display: block;
+	left: 50px;
+	margin: 0;
+	padding: 0;
+	position: fixed;
+	text-align: center;
+	top: 50px;
+	width: 20%;
+}
+
+figure img {
+	width: 100%;
+}
+
+figcaption {
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size: 1vw;
+	white-space: pre-line;
+}

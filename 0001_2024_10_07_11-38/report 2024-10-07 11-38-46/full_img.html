@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+    Карта точек тестирования
+</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" sizes="32x32" href="static/img/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="static/img/favicon-16x16.png">
+        
+    <link rel="stylesheet" href="static/styles/style_for_map.css">
+    <script type="text/javascript" src="static/scripts/full_image_script.js"></script>
+
+    </head>
+
+    
+
+
+
+
+
+
+
+
+<body>
+    <center>
+        <img id="board_img" src="static/img/board.jpeg" alt="Изображение платы с пинами" usemap="#map">
+    </center>
+    <p>
+        <map name="map">
+            <area onmouseover="hide_or_show_img(this, true);" onmouseout="hide_or_show_img(this, false);" shape="circle" coords="1388.471244028545,1242.6534036371427,6" href="#point1388.4712440285451242.6534036371427" alt="">
+            <area onmouseover="hide_or_show_img(this, true);" onmouseout="hide_or_show_img(this, false);" shape="circle" coords="1553.4871629865768,1240.3929115966216,6" href="#point1553.48716298657681240.3929115966216" alt="">
+        </map>
+    </p>
+    <figure id="img1388.471244028545,1242.6534036371427,6" onmouseover="change_position(this);" style="display: none;">
+        <p>
+            <img src="static/img/0_0_iv.png" alt="Сигнатуры в точке тестирования" title="Сигнатуры в точке тестирования">
+        </p>
+    </figure>
+    <figure id="img1553.4871629865768,1240.3929115966216,6" onmouseover="change_position(this);" style="display: none;">
+        <p>
+            <img src="static/img/0_1_iv.png" alt="Сигнатуры в точке тестирования" title="Сигнатуры в точке тестирования">
+        </p>
+    </figure>
+</body>
+
+</html>
