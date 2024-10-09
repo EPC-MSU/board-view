@@ -24,7 +24,6 @@ class ElementItem(ComponentGroup):
         super().__init__(False, True)
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        self._rect: QRectF = rect
         self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
         self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
@@ -49,6 +48,10 @@ class ElementItem(ComponentGroup):
             pin_item.setPos(point)
             pin_item.setZValue(ElementItem.Z_PIN)
             self.addToGroup(pin_item)
+
+    def adjust_element_description(self) -> None:
+        self._description_item.adjust_rect(self._rect_item.boundingRect())
+        self._description_item.setPos(self._rect_item.scenePos())
 
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         """
@@ -92,9 +95,10 @@ class ElementItem(ComponentGroup):
             if self.scene():
                 self.scene().removeItem(self._description_item)
 
-        self._description_item = DescriptionItem(self._rect, name=self._name, svg_file=svg_file, rotation=rotation)
+        self._description_item = DescriptionItem(self._rect_item.boundingRect(), name=self._name, svg_file=svg_file,
+                                                 rotation=rotation)
         self._description_item.setZValue(ElementItem.Z_DESCRIPTION)
-        self._description_item.setPos(self.pos())
+        self._description_item.setPos(self._rect_item.scenePos())
         self.addToGroup(self._description_item)
 
     def show_element_name(self, show: bool) -> None:

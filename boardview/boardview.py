@@ -76,14 +76,39 @@ class BoardView(ExtendedScene):
         if rect_item is None:
             raise RuntimeError("ElementItem without ScalableComponent")
 
-        super().mouseMoveEvent(event)
+        if rect_item not in self._scene.selectedItems():
+            self._drag_point_components_in_element_item(event, rect_item)
+        else:
+            self._drag_rect_component_in_element_item(event, rect_item)
 
+    def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: ScalableComponent) -> None:
+        """
+        :param event: mouse event;
+        :param rect_item: rectangle item of element.
+        """
+
+        super().mouseMoveEvent(event)
         for item in self._components_in_operation:
             if isinstance(item, PointComponent):
                 if not rect_item.contains(rect_item.mapFromScene(item.pos())):
                     pos = get_valid_position_for_point_inside_rect(item.scenePos(),
                                                                    rect_item.mapRectToScene(rect_item.boundingRect()))
                     item.setPos(pos)
+
+    def _drag_rect_component_in_element_item(self, event: QMouseEvent, rect_item: ScalableComponent) -> None:
+        """
+        :param event: mouse event;
+        :param rect_item: rectangle item of element.
+        """
+
+        points_before = {item: item.scenePos() for item in self._components_in_operation
+                         if isinstance(item, PointComponent)}
+        rect_before = rect_item.mapRectToScene(rect_item.boundingRect())
+        super().mouseMoveEvent(event)
+        rect_after = rect_item.mapRectToScene(rect_item.boundingRect())
+        for item, pos in points_before.items():
+            new_pos = get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
+            item.setPos(new_pos)
 
     def _increment_point_numbers(self, start_number: int) -> None:
         """
@@ -93,6 +118,15 @@ class BoardView(ExtendedScene):
         for component in self._components:
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.increment_number()
+
+    def _set_no_action_mode(self) -> None:
+        if self._view_mode is ViewMode.EDIT and isinstance(self._group, ElementItem):
+            self._group.adjust_element_description()
+
+        if self._element_names_to_show_backup:
+            self.show_element_descriptions()
+        else:
+            self.hide_element_descriptions()
 
     def _show_element_descriptions(self, show: bool) -> None:
         """
@@ -174,10 +208,7 @@ class BoardView(ExtendedScene):
         """
 
         if mode is ViewMode.NO_ACTION:
-            if self._element_names_to_show_backup:
-                self.show_element_descriptions()
-            else:
-                self.hide_element_descriptions()
+            self._set_no_action_mode()
         else:
             if self._view_mode is ViewMode.NO_ACTION:
                 self._element_names_to_show_backup = self._element_names_to_show
@@ -194,6 +225,19 @@ class BoardView(ExtendedScene):
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
+
+
+def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) -> QPointF:
+    """
+    :param point:
+    :param rel_point_old:
+    :param rel_point_new:
+    :return:
+    """
+
+    x = point.x() - rel_point_old.x() + rel_point_new.x()
+    y = point.y() - rel_point_old.y() + rel_point_new.y()
+    return QPointF(x, y)
 
 
 def get_valid_position_for_point_inside_rect(point: QPointF, rect: QRectF) -> QPointF:

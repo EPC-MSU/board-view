@@ -94,8 +94,17 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
                 self._description_item.setRotation(-90)
 
     def _scale_description_item(self) -> None:
+        self._description_item.setScale(1)  # need to return the original value
         description_rect = self._description_item.mapToScene(self._description_item.boundingRect()).boundingRect()
         rect = self._rect_item.boundingRect()
         x_scale = rect.width() / description_rect.width()
         y_scale = rect.height() / description_rect.height()
         self._description_item.setScale(min(x_scale, y_scale))
+
+    def adjust_rect(self, rect: QRectF) -> None:
+        """
+        :param rect: a rectangle to the size of which you want to adjust the description item.
+        """
+
+        self._rect_item.setRect(rect)
+        self._adjust_description_item()
