@@ -4,7 +4,7 @@ from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQtExtendedScene import ComponentGroup, ExtendedScene, ScalableComponent, PointComponent
+from PyQtExtendedScene import ComponentGroup, ExtendedScene, PointComponent, RectComponent
 from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .pin import GraphicsManualPinItem
@@ -40,7 +40,7 @@ class BoardView(ExtendedScene):
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._view_mode: ViewMode = ViewMode.NO_ACTION
 
-        self.edited_group_component_signal.connect(self._handle_edited_element)
+        self.edited_group_component_signal.connect(self._handle_edited_element_item)
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
@@ -63,8 +63,9 @@ class BoardView(ExtendedScene):
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.decrement_number()
 
-    def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: ScalableComponent) -> None:
+    def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
+        Method limits the movement of element pins within the element's boundaries.
         :param event: mouse event;
         :param rect_item: rectangle item of element.
         """
@@ -77,8 +78,9 @@ class BoardView(ExtendedScene):
                                                                    rect_item.mapRectToScene(rect_item.boundingRect()))
                     item.setPos(pos)
 
-    def _drag_rect_component_in_element_item(self, event: QMouseEvent, rect_item: ScalableComponent) -> None:
+    def _drag_rect_component_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
+        Method moves the entire rectangle/border of the element with all the pins of the element.
         :param event: mouse event;
         :param rect_item: rectangle item of element.
         """
@@ -92,18 +94,23 @@ class BoardView(ExtendedScene):
             new_pos = get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
             item.setPos(new_pos)
 
-    def _finish_create_scalable_component_by_mouse(self) -> None:
+    def _finish_create_rect_component_by_mouse(self) -> None:
+        """
+        The element's border is replaced with a new mouse-drawn border if the new border contains all the element's
+        existing pins.
+        """
+
         for item in self._components_in_operation:
             if not isinstance(item, PointComponent):
                 continue
 
             if not self._current_component.contains(self._current_component.mapFromScene(item.pos())):
-                self._scene.removeItem(self._current_component)
+                self.scene().removeItem(self._current_component)
                 self._current_component = None
                 return
 
-        super()._finish_create_scalable_component_by_mouse()
-        rect_items = [item for item in self._components_in_operation if isinstance(item, ScalableComponent)]
+        super()._finish_create_rect_component_by_mouse()
+        rect_items = [item for item in self._components_in_operation if isinstance(item, RectComponent)]
         if len(rect_items) == 1:
             return
 
@@ -111,14 +118,14 @@ class BoardView(ExtendedScene):
             self._components_in_operation.remove(rect_items[0])
             self.remove_component(rect_items[0])
 
-    def _get_rect_item_from_components_in_operation(self) -> Optional[ScalableComponent]:
+    def _get_rect_item_from_components_in_operation(self) -> Optional[RectComponent]:
         """
-        :return: rectangular (scalable) component.
+        :return: rectangular item from the list of items that are in operation.
         """
 
-        rect_items = [item for item in self._components_in_operation if isinstance(item, ScalableComponent)]
+        rect_items = [item for item in self._components_in_operation if isinstance(item, RectComponent)]
         if len(rect_items) > 1:
-            raise RuntimeError(f"Too many ScalableComponents ({len(rect_items)}) in ElementItem")
+            raise RuntimeError(f"Too many RectComponents ({len(rect_items)}) in ElementItem")
 
         if not rect_items:
             return None
@@ -132,13 +139,13 @@ class BoardView(ExtendedScene):
 
         rect_item = self._get_rect_item_from_components_in_operation()
 
-        if rect_item not in self._scene.selectedItems():
+        if rect_item not in self.scene().selectedItems():
             self._drag_point_components_in_element_item(event, rect_item)
         else:
             self._drag_rect_component_in_element_item(event, rect_item)
 
     @pyqtSlot(QGraphicsItem)
-    def _handle_edited_element(self, item: QGraphicsItem) -> None:
+    def _handle_edited_element_item(self, item: QGraphicsItem) -> None:
         """
         :param item: group component after editing.
         """
@@ -149,8 +156,6 @@ class BoardView(ExtendedScene):
             element_name = get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
-            for child_item in item.childItems():
-                self._scene.removeItem(child_item)
             self.add_component(element_item)
 
     def _increment_point_numbers(self, start_number: int) -> None:
@@ -174,6 +179,7 @@ class BoardView(ExtendedScene):
 
     def _start_create_point_component_by_mouse(self, pos: QPointF) -> None:
         """
+        Method creates a new point if the new point is inside the element's boundaries.
         :param pos: mouse position.
         """
 
@@ -218,7 +224,7 @@ class BoardView(ExtendedScene):
             self._handle_component_resize_by_mouse()
 
         if self._operation is ExtendedScene.Operation.DRAG_COMPONENT:
-            if self._mode is SceneMode.EDIT_GROUP:
+            if self._scene_mode is SceneMode.EDIT_GROUP:
                 self._handle_component_drag_by_mouse_in_edit_group_mode(event)
                 return
 
@@ -292,10 +298,9 @@ def get_unique_element_name(items: List[QGraphicsItem]) -> str:
 
     i = 1
     name = "UserElement_{}"
-    for item in items:
-        if isinstance(item, ElementItem):
-            while item.name == name.format(i):
-                i += 1
+    element_names = {item.name.lower() for item in items if isinstance(item, ElementItem)}
+    while name.format(i).lower() in element_names:
+        i += 1
     return name.format(i)
 
 

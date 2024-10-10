@@ -2,7 +2,7 @@ from typing import List, Optional
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
-from PyQtExtendedScene import ComponentGroup, PointComponent, ScalableComponent
+from PyQtExtendedScene import ComponentGroup, PointComponent, RectComponent
 from .descriptionitem import DescriptionItem
 
 
@@ -24,7 +24,7 @@ class ElementItem(ComponentGroup):
         super().__init__(False, True)
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        self._rect_item: Optional[ScalableComponent] = ScalableComponent(rect)
+        self._rect_item: Optional[RectComponent] = RectComponent(rect)
         self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
 
@@ -72,7 +72,7 @@ class ElementItem(ComponentGroup):
 
     def adjust_element_description(self) -> None:
         for item in self.childItems():
-            if isinstance(item, ScalableComponent):
+            if isinstance(item, RectComponent):
                 self._rect_item = item
                 break
 
