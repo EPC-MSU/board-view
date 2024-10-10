@@ -38,6 +38,7 @@ class BoardView(ExtendedScene):
         super().__init__(background, zoom_speed, parent)
         self._element_names_to_show: bool = True
         self._element_names_to_show_backup: bool = self._element_names_to_show
+        self._start_mouse_pos: QPointF = QPointF(self._mouse_pos)
         self._view_mode: ViewMode = ViewMode.NO_ACTION
 
         self.edited_group_component_signal.connect(self._handle_edited_element_item)
@@ -144,6 +145,35 @@ class BoardView(ExtendedScene):
         else:
             self._drag_rect_component_in_element_item(event, rect_item)
 
+    def _handle_component_resize_by_mouse(self) -> None:
+        """
+        Method changes the size of a rectangular item using the mouse. This takes into account that the rectangle must
+        remain large enough to contain all existing points.
+        """
+
+
+        points = [item.pos() for item in self._components_in_operation if isinstance(item, PointComponent)]
+        if not points:
+            super()._handle_component_resize_by_mouse()
+            return
+
+        min_rect = get_min_borders_for_points(points)
+        if self._start_mouse_pos.x() < min_rect.left() < self._mouse_pos.x():
+            x = min_rect.left()
+        elif self._start_mouse_pos.x() > min_rect.right() > self._mouse_pos.x():
+            x = min_rect.right()
+        else:
+            x = self._mouse_pos.x()
+
+        if self._start_mouse_pos.y() < min_rect.top() < self._mouse_pos.y():
+            y = min_rect.top()
+        elif self._start_mouse_pos.y() > min_rect.bottom() > self._mouse_pos.y():
+            y = min_rect.bottom()
+        else:
+            y = self._mouse_pos.y()
+
+        self._current_component.resize_by_mouse(QPointF(x, y))
+
     @pyqtSlot(QGraphicsItem)
     def _handle_edited_element_item(self, item: QGraphicsItem) -> None:
         """
@@ -166,6 +196,22 @@ class BoardView(ExtendedScene):
         for component in self._components:
             if isinstance(component, GraphicsManualPinItem) and start_number <= component.number:
                 component.increment_number()
+
+    def _set_resize_mode_for_rect_component(self, item: RectComponent) -> bool:
+        """
+        :param item: component that will be resized.
+        :return: True if the mode is set.
+        """
+
+        if (isinstance(item, RectComponent) and item.isSelected() and not item.is_in_group() and
+                item.check_in_resize_mode()):
+            self._start_mouse_pos = QPointF(self._mouse_pos)
+            item.go_to_resize_mode()
+            self._current_component = item
+            self._operation = ExtendedScene.Operation.RESIZE_COMPONENT
+            return True
+
+        return False
 
     def _show_element_descriptions(self, show: bool) -> None:
         """
@@ -274,6 +320,19 @@ class BoardView(ExtendedScene):
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
+
+
+def get_min_borders_for_points(points: List[QPointF]) -> QRectF:
+    """
+    :param points: list with coordinates of points.
+    :return: the smallest rectangle that contains all the points from the list.
+    """
+
+    x_coords = [point.x() for point in points]
+    x_min, x_max = min(x_coords), max(x_coords)
+    y_coords = [point.y() for point in points]
+    y_min, y_max = min(y_coords), max(y_coords)
+    return QRectF(x_min, y_min, x_max - x_min, y_max - y_min)
 
 
 def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) -> QPointF:
