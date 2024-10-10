@@ -151,7 +151,6 @@ class BoardView(ExtendedScene):
         remain large enough to contain all existing points.
         """
 
-
         points = [item.pos() for item in self._components_in_operation if isinstance(item, PointComponent)]
         if not points:
             super()._handle_component_resize_by_mouse()

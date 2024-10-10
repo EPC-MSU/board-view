@@ -39,7 +39,9 @@ class ElementItem(ComponentGroup):
         :return: new element item.
         """
 
-        element_item = cls(item.boundingRect(), name)
+        rect = item.boundingRect()
+        element_item = cls(QRectF(0, 0, rect.width(), rect.height()), name)
+        element_item.setPos(rect.topLeft())
         pins = [child_item.pos() for child_item in item.childItems() if isinstance(child_item, PointComponent)]
         element_item.add_pins(pins)
         return element_item
