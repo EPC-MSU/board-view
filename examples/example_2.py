@@ -21,7 +21,7 @@ class Dialog(QDialog):
         self._init_ui()
 
     def _init_ui(self) -> None:
-        board_dir = "0001_2024_10_07_11-38"
+        board_dir = "example_board"
         board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
         self.board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"))
 
