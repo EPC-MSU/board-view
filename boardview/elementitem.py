@@ -91,6 +91,7 @@ class ElementItem(ComponentGroup):
         element_item = ElementItem(rect, self._name)
         element_item.setPos(self.scenePos())
         element_item.add_pins(pins)
+        element_item.set_element_description(**self._description_item.get_data_to_copy())
         return element_item, self.scenePos()
 
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:

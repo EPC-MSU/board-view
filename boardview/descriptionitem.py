@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QBrush, QColor, QFont
 from PyQt5.QtSvg import QGraphicsSvgItem
@@ -8,7 +8,7 @@ from PyQtExtendedScene import BaseComponent
 
 class DescriptionItem(QGraphicsItemGroup, BaseComponent):
     """
-    Class for displaying the element name.
+    Class for displaying the element name or the ideal display of the element.
     """
 
     BACKGROUND_COLOR: QColor = QColor("black")
@@ -34,13 +34,16 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         self._rotation: Optional[int] = rotation
         self._rect_item: QGraphicsRectItem = self._create_rect_item_for_background(rect)
         self.addToGroup(self._rect_item)
+
+        self._svg: bool = False
+        self._svg_file: Optional[str] = None
         if svg_file is not None:
             self._description_item: QGraphicsSvgItem = QGraphicsSvgItem(svg_file)
             self._rect_item.hide()
-            self._svg: bool = True
+            self._svg = True
+            self._svg_file = svg_file
         else:
             self._description_item: QGraphicsTextItem = self._create_text_item(name or "")
-            self._svg: bool = False
         self.addToGroup(self._description_item)
 
         self._adjust_description_item()
@@ -108,3 +111,11 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         self._rect_item.setRect(rect)
         self._adjust_description_item()
+
+    def get_data_to_copy(self) -> Dict[str, Any]:
+        """
+        :return: a dictionary with data that can be used to copy a description for an element.
+        """
+
+        return {"rotation": self._rotation,
+                "svg_file": self._svg_file}
