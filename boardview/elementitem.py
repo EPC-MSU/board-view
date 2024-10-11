@@ -28,7 +28,7 @@ class ElementItem(ComponentGroup):
         self._rect_item.setZValue(ElementItem.Z_RECT)
         self.addToGroup(self._rect_item)
 
-        self._selection_signal.connect(self._set_selection_from_group_to_rect)
+        self.selection_signal.connect(self._set_selection_from_group_to_rect)
         self.set_element_description()
 
     @classmethod
