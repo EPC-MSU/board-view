@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
-from PyQtExtendedScene import ComponentGroup, PointComponent, RectComponent
+from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent
 from .descriptionitem import DescriptionItem
 
 
@@ -81,6 +81,18 @@ class ElementItem(ComponentGroup):
         self._description_item.adjust_rect(self._rect_item.boundingRect())
         self._description_item.setPos(self._rect_item.pos())
 
+    def copy(self) -> Tuple["ElementItem", QPointF]:
+        """
+        :return: copied component and its current position.
+        """
+
+        pins = [item.scenePos() for item in self.childItems() if isinstance(item, PointComponent)]
+        rect = QRectF(0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height())
+        element_item = ElementItem(rect, self._name)
+        element_item.setPos(self.scenePos())
+        element_item.add_pins(pins)
+        return element_item, self.scenePos()
+
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         """
         :param event: hover event.
@@ -128,6 +140,16 @@ class ElementItem(ComponentGroup):
         self._description_item.setZValue(ElementItem.Z_DESCRIPTION)
         self._description_item.setPos(self._rect_item.scenePos())
         self.addToGroup(self._description_item)
+
+    def set_position_after_paste(self, mouse_pos: QPointF, item_pos: QPointF, left: float, top: float) -> None:
+        """
+        :param mouse_pos: mouse position;
+        :param item_pos: position of the component when copying;
+        :param left: x coordinate in the scene reference system that should be at the mouse position;
+        :param top: y coordinate in the scene reference system that should be at the mouse position.
+        """
+
+        BaseComponent.set_position_after_paste(self, mouse_pos, item_pos, left, top)
 
     def show_element_name(self, show: bool) -> None:
         """
