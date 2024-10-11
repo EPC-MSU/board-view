@@ -32,10 +32,13 @@ class Dialog(QDialog):
         self.button_edit.toggled.connect(self._set_mode)
 
         h_layout = QHBoxLayout()
+        h_layout.setContentsMargins(5, 5, 5, 5)
         h_layout.addWidget(self.button_no_action)
         h_layout.addWidget(self.button_edit)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         layout.addLayout(h_layout)
         layout.addWidget(self.board_view)
         self.setLayout(layout)
