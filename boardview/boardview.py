@@ -133,13 +133,28 @@ class BoardView(ExtendedScene):
 
         return rect_items[0]
 
+    def _handle_component_creation_by_mouse(self) -> None:
+        """
+        Method limits the movement of the newly created pin within the boundaries of the element.
+        """
+
+        if isinstance(self._current_component, PointComponent):
+            rect_item = self._get_rect_item_from_components_in_operation()
+            if not rect_item.contains(rect_item.mapFromScene(self._mouse_pos)):
+                pos = get_valid_position_for_point_inside_rect(self._mouse_pos,
+                                                               rect_item.mapRectToScene(rect_item.boundingRect()))
+            else:
+                pos = self._mouse_pos
+            self._current_component.setPos(pos)
+        elif isinstance(self._current_component, RectComponent):
+            self._current_component.resize_by_mouse(self._mouse_pos)
+
     def _handle_component_drag_by_mouse_in_edit_group_mode(self, event: QMouseEvent) -> None:
         """
         :param event: mouse event.
         """
 
         rect_item = self._get_rect_item_from_components_in_operation()
-
         if rect_item not in self.scene().selectedItems():
             self._drag_point_components_in_element_item(event, rect_item)
         else:
