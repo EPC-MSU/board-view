@@ -290,6 +290,20 @@ class BoardView(ExtendedScene):
 
         super().mouseMoveEvent(event)
 
+    def paste_copied_components(self) -> None:
+        """
+        Method introduces restrictions on pasting copied elements. In normal mode, you can only paste ElementItems and
+        you cannot paste Point/RectComponents.
+        """
+
+        copied_components_for_mode = []
+        for item, pos in self._copied_components:
+            if self._scene_mode is not SceneMode.NO_ACTION or isinstance(item, ElementItem):
+                copied_components_for_mode.append((item, pos))
+
+        if copied_components_for_mode:
+            super().paste_copied_components(copied_components_for_mode)
+
     def remove_point(self, number: int) -> None:
         """
         :param number: number of the point to be deleted.
