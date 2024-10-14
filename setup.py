@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 setup(name="boardview",
-      version="0.1.4",
+      version="2.0.0",
       description="Board view widget for EyePoint",
       url="https://github.com/EPC-MSU/board-view",
       author="EPC MSU",
@@ -12,7 +12,10 @@ setup(name="boardview",
       python_requires=">=3.6, <=3.8",
       install_requires=[
             "PyQt5>=5.8.2, <=5.15.0",
-            "PyQtExtendedScene==1.0.14"
+            "PyQtExtendedScene"
+      ],
+      dependency_links=[
+            "git+https://github.com/EPC-MSU/PyQtExtendedScene@t-105103#egg=PyQtExtendedScene"
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
