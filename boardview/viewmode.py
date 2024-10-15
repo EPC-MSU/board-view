@@ -2,5 +2,9 @@ from enum import auto, Enum
 
 
 class ViewMode(Enum):
+    """
+    Enumeration of board view modes.
+    """
+
     EDIT = auto()
-    NO_ACTION = auto()
+    NORMAL = auto()

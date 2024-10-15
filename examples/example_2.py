@@ -48,7 +48,7 @@ class Dialog(QDialog):
         if self.sender() == self.button_edit:
             mode = ViewMode.EDIT
         else:
-            mode = ViewMode.NO_ACTION
+            mode = ViewMode.NORMAL
 
         if self.sender().isChecked():
             self.board_view.set_view_mode(mode)
