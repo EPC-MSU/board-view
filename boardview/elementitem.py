@@ -81,6 +81,10 @@ class ElementItem(ComponentGroup):
         self._description_item.adjust_rect(self._rect_item.boundingRect())
         self._description_item.setPos(self._rect_item.pos())
 
+        for item in self.childItems():
+            self.removeFromGroup(item)
+            self.addToGroup(item)
+
     def copy(self) -> Tuple["ElementItem", QPointF]:
         """
         :return: copied component and its current position.
