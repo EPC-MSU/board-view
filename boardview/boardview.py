@@ -39,6 +39,22 @@ class BoardView(ExtendedScene):
 
         self.edited_group_component_signal.connect(self._handle_edited_element_item)
 
+    def _delete_items_in_edit_mode(self):
+        """
+        Method deletes all pins if a rectangle is deleted in edit mode.
+        """
+
+        rect_item = None
+        for item in self._components_in_operation:
+            if isinstance(item, RectComponent):
+                rect_item = item
+
+        if rect_item is None:
+            items_to_delete = self._components_in_operation[:]
+            for item in items_to_delete:
+                self.remove_component(item)
+                self._components_in_operation.remove(item)
+
     def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
         Method limits the movement of element pins within the element's boundaries.
@@ -222,6 +238,11 @@ class BoardView(ExtendedScene):
 
         element_item.show_element_name(self._element_names_to_show)
         self.add_component(element_item)
+
+    def delete_selected_components(self) -> None:
+        super().delete_selected_components()
+        if self._view_mode is ViewMode.EDIT:
+            self._delete_items_in_edit_mode()
 
     def hide_element_descriptions(self) -> None:
         self._show_element_descriptions(False)
