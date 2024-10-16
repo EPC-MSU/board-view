@@ -101,7 +101,7 @@ class BoardView(ExtendedScene):
 
         rect_items = [item for item in self._components_in_operation if isinstance(item, RectComponent)]
         if len(rect_items) > 1:
-            raise RuntimeError(f"Too many RectComponents ({len(rect_items)}) in ElementItem")
+            raise ValueError(f"Too many RectComponents ({len(rect_items)}) in ElementItem")
 
         if not rect_items:
             return None
@@ -170,7 +170,7 @@ class BoardView(ExtendedScene):
         """
 
         if isinstance(item, ElementItem):
-            item.adjust_element_description()
+            item.update_position_after_editing()
         elif isinstance(item, ComponentGroup):
             element_name = get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
