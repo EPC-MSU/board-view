@@ -4,7 +4,7 @@ from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQtExtendedScene import ComponentGroup, ExtendedScene, PointComponent, RectComponent
+from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent
 from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .viewmode import ViewMode
@@ -39,21 +39,23 @@ class BoardView(ExtendedScene):
 
         self.edited_group_component_signal.connect(self._handle_edited_element_item)
 
-    def _delete_items_in_edit_mode(self):
+    def _delete_items_in_edit_mode(self) -> None:
         """
         Method deletes all pins if a rectangle is deleted in edit mode.
         """
 
-        rect_item = None
-        for item in self._components_in_operation:
-            if isinstance(item, RectComponent):
-                rect_item = item
-
+        rect_item = self._get_rect_item_from_components_in_operation()
         if rect_item is None:
             items_to_delete = self._components_in_operation[:]
-            for item in items_to_delete:
-                self.remove_component(item)
-                self._components_in_operation.remove(item)
+        else:
+            items_to_delete = []
+            for item in self._components_in_operation:
+                if isinstance(item, PointComponent) and not rect_item.contains_point(item.pos()):
+                    items_to_delete.append(item)
+
+        for item in items_to_delete:
+            self.remove_component(item)
+            self._components_in_operation.remove(item)
 
     def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
@@ -64,11 +66,10 @@ class BoardView(ExtendedScene):
 
         super().mouseMoveEvent(event)
         for item in self._components_in_operation:
-            if isinstance(item, PointComponent):
-                if not rect_item.contains(rect_item.mapFromScene(item.pos())):
-                    pos = get_valid_position_for_point_inside_rect(item.scenePos(),
-                                                                   rect_item.mapRectToScene(rect_item.boundingRect()))
-                    item.setPos(pos)
+            if isinstance(item, PointComponent) and not rect_item.contains_point(item):
+                pos = get_valid_position_for_point_inside_rect(item.scenePos(),
+                                                               rect_item.mapRectToScene(rect_item.boundingRect()))
+                item.setPos(pos)
 
     def _drag_rect_component_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
@@ -93,10 +94,7 @@ class BoardView(ExtendedScene):
         """
 
         for item in self._components_in_operation:
-            if not isinstance(item, PointComponent):
-                continue
-
-            if not self._current_component.contains(self._current_component.mapFromScene(item.pos())):
+            if isinstance(item, PointComponent) and not self._current_component.contains_point(item):
                 self.scene().removeItem(self._current_component)
                 self._current_component = None
                 return
@@ -131,7 +129,7 @@ class BoardView(ExtendedScene):
 
         if isinstance(self._current_component, PointComponent):
             rect_item = self._get_rect_item_from_components_in_operation()
-            if not rect_item.contains(rect_item.mapFromScene(self._mouse_pos)):
+            if not rect_item.contains_point(self._mouse_pos):
                 pos = get_valid_position_for_point_inside_rect(self._mouse_pos,
                                                                rect_item.mapRectToScene(rect_item.boundingRect()))
             else:
@@ -178,6 +176,37 @@ class BoardView(ExtendedScene):
             y = self._mouse_pos.y()
 
         self._current_component.resize_by_mouse(QPointF(x, y))
+
+    @pyqtSlot(BaseComponent, bool)
+    def _handle_deselecting_pasted_component(self, component: BaseComponent, selected: bool) -> None:
+        """
+        :param component: a component that was pasted after copying and then became unselected;
+        :param selected: if False, then the component has become unselected.
+        """
+
+        if self._view_mode is ViewMode.NORMAL:
+            super()._handle_deselecting_pasted_component(component)
+            return
+
+        if selected:
+            return
+
+        if component in self._pasted_components:
+            component.selection_signal.disconnect(self._pasted_components[component])
+            self._pasted_components.pop(component)
+            component.set_scene_mode(self._scene_mode)
+
+            if isinstance(component, ElementItem):
+                self.remove_component(component)
+                for item in component.childItems():
+                    component.removeFromGroup(item)
+                    if isinstance(item, (PointComponent, RectComponent)):
+                        self.add_component(item)
+                        self._components_in_operation.append(item)
+            else:
+                self._components_in_operation.append(component)
+
+            self._update_rect_item_after_pasting_in_edit_mode()
 
     @pyqtSlot(QGraphicsItem)
     def _handle_edited_element_item(self, item: QGraphicsItem) -> None:
@@ -226,10 +255,33 @@ class BoardView(ExtendedScene):
         """
 
         rect_item = self._get_rect_item_from_components_in_operation()
-        if not rect_item or not rect_item.contains(rect_item.mapFromScene(pos)):
+        if not rect_item or not rect_item.contains_point(pos):
             return
 
         super()._start_create_point_component_by_mouse(pos)
+
+    def _update_rect_item_after_pasting_in_edit_mode(self) -> None:
+        points = []
+        rect_items = []
+        rects = []
+        for item in self._components_in_operation:
+            if isinstance(item, RectComponent):
+                rect_items.append(item)
+                rects.append(item.mapRectToScene(item.boundingRect()))
+            elif isinstance(item, PointComponent):
+                points.append(item.scenePos())
+
+        min_rect_for_points = get_min_borders_for_points(points)
+        max_rect = get_max_rect(min_rect_for_points, *rects)
+
+        for item in rect_items:
+            self._components_in_operation.remove(item)
+            self.remove_component(item)
+
+        max_rect_item = RectComponent(QRectF(0, 0, max_rect.width(), max_rect.height()))
+        max_rect_item.setPos(max_rect.topLeft())
+        self._components_in_operation.append(max_rect_item)
+        self.add_component(max_rect_item)
 
     def add_element_item(self, element_item: ElementItem) -> None:
         """
@@ -302,6 +354,19 @@ class BoardView(ExtendedScene):
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
+
+
+def get_max_rect(*rects: QRectF) -> QRectF:
+    """
+    :param rects: rectangles for which to find the largest rectangle surrounding them.
+    :return: a rectangle surrounding given rectangles.
+    """
+
+    left = min(rect.left() for rect in rects)
+    right = max(rect.right() for rect in rects)
+    top = min(rect.top() for rect in rects)
+    bottom = max(rect.bottom() for rect in rects)
+    return QRectF(left, top, right - left, bottom - top)
 
 
 def get_min_borders_for_points(points: List[QPointF]) -> QRectF:
