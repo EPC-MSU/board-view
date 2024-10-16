@@ -246,7 +246,7 @@ class BoardView(ExtendedScene):
         self._element_names_to_show = show
         for element in self._components:
             if isinstance(element, ElementItem):
-                element.show_element_name(show)
+                element.show_element_description(show)
 
     def _start_create_point_component_by_mouse(self, pos: QPointF) -> None:
         """
@@ -288,7 +288,7 @@ class BoardView(ExtendedScene):
         :param element_item: element item to be added to the board view.
         """
 
-        element_item.show_element_name(self._element_names_to_show)
+        element_item.show_element_description(self._element_names_to_show)
         self.add_component(element_item)
 
     def delete_selected_components(self) -> None:

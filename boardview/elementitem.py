@@ -160,9 +160,9 @@ class ElementItem(ComponentGroup):
 
         BaseComponent.set_position_after_paste(self, mouse_pos, item_pos, left_top)
 
-    def show_element_name(self, show: bool) -> None:
+    def show_element_description(self, show: bool) -> None:
         """
-        :param show: if True, then need to show the element name.
+        :param show: if True, then need to show the element description.
         """
 
         is_selected_before = self.isSelected()
@@ -174,7 +174,7 @@ class ElementItem(ComponentGroup):
 
     def update_position_after_editing(self, scale: float) -> None:
         """
-        :param scale:
+        :param scale: scale factor.
         """
 
         self._description_item, self._rect_item, point_items = self._get_child_items()
