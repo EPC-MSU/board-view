@@ -185,7 +185,7 @@ class BoardView(ExtendedScene):
         """
 
         if self._view_mode is ViewMode.NORMAL:
-            super()._handle_deselecting_pasted_component(component)
+            super()._handle_deselecting_pasted_component(component, selected)
             return
 
         if selected:
