@@ -188,7 +188,11 @@ class ElementItem(ComponentGroup):
             self._description_item.hide()
         self.setSelected(is_selected_before)
 
-    def update_position_after_editing(self) -> None:
+    def update_position_after_editing(self, scale: float) -> None:
+        """
+        :param scale:
+        """
+
         self._description_item, self._rect_item, point_items = self._get_child_items()
         for item in (self._description_item, self._rect_item, *point_items):
             self.removeFromGroup(item)
@@ -204,3 +208,5 @@ class ElementItem(ComponentGroup):
         self.addToGroup(self._description_item)
 
         self.add_pins([item.scenePos() for item in point_items])
+
+        self._scale_changed.emit(scale)

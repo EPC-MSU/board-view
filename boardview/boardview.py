@@ -215,7 +215,7 @@ class BoardView(ExtendedScene):
         """
 
         if isinstance(item, ElementItem):
-            item.update_position_after_editing()
+            item.update_position_after_editing(self._scale)
         elif isinstance(item, ComponentGroup):
             element_name = get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
