@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget, QGraphicsItem
+from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
 from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent
 from .descriptionitem import DescriptionItem
 
@@ -54,39 +54,23 @@ class ElementItem(ComponentGroup):
 
         return self._name
 
-    @staticmethod
-    def _check_rect_and_description_items_number(items: List[QGraphicsItem], item_type: type) -> None:
-        """
-        :param items: RectComponent or DescriptionItem list to check for quantity;
-        :param item_type: type of items.
-        """
-
-        if len(items) == 0:
-            raise ValueError(f"ElementItem does not have {item_type.__name__}")
-
-        if len(items) > 1:
-            raise ValueError(f"There are {len(items)} {item_type.__name__} in ElementItem. An ElementItem must have "
-                             f"only one {item_type.__name__}")
-
-    def _get_child_items(self) -> Tuple[DescriptionItem, RectComponent, List[PointComponent]]:
+    def _get_child_items(self) -> Tuple[Optional[DescriptionItem], Optional[RectComponent], List[PointComponent]]:
         """
         :return: description item, rectangular item and point items of element item.
         """
 
-        description_items = []
-        rect_items = []
+        description_item = None
+        rect_item = None
         points = []
         for item in self.childItems():
             if isinstance(item, DescriptionItem):
-                description_items.append(item)
+                description_item = item
             elif isinstance(item, PointComponent):
                 points.append(item)
             elif isinstance(item, RectComponent):
-                rect_items.append(item)
+                rect_item = item
 
-        self._check_rect_and_description_items_number(description_items, DescriptionItem)
-        self._check_rect_and_description_items_number(rect_items, RectComponent)
-        return description_items[0], rect_items[0], points
+        return description_item, rect_item, points
 
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         """
@@ -195,7 +179,8 @@ class ElementItem(ComponentGroup):
 
         self._description_item, self._rect_item, point_items = self._get_child_items()
         for item in (self._description_item, self._rect_item, *point_items):
-            self.removeFromGroup(item)
+            if item is not None:
+                self.removeFromGroup(item)
 
         pos_for_element_item = self._rect_item.scenePos()
         self.setPos(QPointF(0, 0))
@@ -203,9 +188,12 @@ class ElementItem(ComponentGroup):
         self.addToGroup(self._rect_item)
         self.setPos(pos_for_element_item)
 
-        self._description_item.adjust_rect(self._rect_item.boundingRect())
-        self._description_item.setPos(self._rect_item.scenePos())
-        self.addToGroup(self._description_item)
+        if self._description_item:
+            self._description_item.adjust_rect(self._rect_item.boundingRect())
+            self._description_item.setPos(self._rect_item.scenePos())
+            self.addToGroup(self._description_item)
+        else:
+            self.set_element_description()
 
         self.add_pins([item.scenePos() for item in point_items])
 
