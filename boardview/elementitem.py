@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
@@ -32,18 +32,32 @@ class ElementItem(ComponentGroup):
         self.set_element_description()
 
     @classmethod
-    def create_from_component_group(cls, item: ComponentGroup, name: str) -> "ElementItem":
+    def create_from_component_group(cls, group: ComponentGroup, name: str) -> "ElementItem":
         """
-        :param item: group component from which to create an ElementItem;
+        :param group: group component from which to create an ElementItem;
         :param name: element name.
         :return: new element item.
         """
 
-        rect = item.boundingRect()
+        rect = group.boundingRect()
         element_item = cls(QRectF(0, 0, rect.width(), rect.height()), name)
         element_item.setPos(rect.topLeft())
-        pins = [child_item.pos() for child_item in item.childItems() if isinstance(child_item, PointComponent)]
+        pins = [child_item.pos() for child_item in group.childItems() if isinstance(child_item, PointComponent)]
         element_item.add_pins(pins)
+        return element_item
+
+    @classmethod
+    def create_from_json(cls, data: Dict[str, Any]) -> "ElementItem":
+        """
+        :param data: a dictionary with basic attributes that can be used to create an object.
+        :return: class instance.
+        """
+
+        pins = [QPointF(*pin) for pin in data["pins"]]
+        element_item = ElementItem(QRectF(*data["rect"]), data["name"])
+        element_item.setPos(QPointF(*data["pos"]))
+        element_item.add_pins(pins)
+        element_item.set_element_description(svg_file=data["svg_file"], rotation=data["rotation"])
         return element_item
 
     @property
@@ -89,6 +103,19 @@ class ElementItem(ComponentGroup):
             pin_item.setPos(point)
             pin_item.setZValue(ElementItem.Z_PIN)
             self.addToGroup(pin_item)
+
+    def convert_to_json(self) -> Dict[str, Any]:
+        """
+        :return: dictionary with basic object attributes.
+        """
+
+        return {**BaseComponent.convert_to_json(self),
+                **self._description_item.get_data_to_copy(),
+                "name": self._name,
+                "pins": [(item.scenePos().x(), item.scenePos().y()) for item in self.childItems()
+                         if isinstance(item, PointComponent)],
+                "pos": (self.scenePos().x(), self.scenePos().y()),
+                "rect": (0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height())}
 
     def copy(self) -> Tuple["ElementItem", QPointF]:
         """

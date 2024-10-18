@@ -1,10 +1,11 @@
+import json
 from typing import List, Optional, Union
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import pyqtSlot, QPointF, QRectF
+from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent
+from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent, utils as ut
 from PyQtExtendedScene.scenemode import SceneMode
 from .elementitem import ElementItem
 from .viewmode import ViewMode
@@ -14,6 +15,8 @@ class BoardView(ExtendedScene):
     """
     Class for displaying the board.
     """
+
+    MIME_TYPE: str = "BoardView_MIME"
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
                  parent=None) -> None:
@@ -325,13 +328,19 @@ class BoardView(ExtendedScene):
         you cannot paste Point/RectComponents.
         """
 
-        copied_components_for_mode = []
-        for item, pos in self._copied_components:
-            if self._scene_mode is not SceneMode.NORMAL or isinstance(item, ElementItem):
-                copied_components_for_mode.append((item, pos))
+        clipboard = qApp.instance().clipboard()
+        mime_data = clipboard.mimeData()
+        if not mime_data.hasFormat(ExtendedScene.MIME_TYPE):
+            return
 
-        if copied_components_for_mode:
-            super().paste_copied_components(copied_components_for_mode)
+        copied_components = json.loads(mime_data.data(ExtendedScene.MIME_TYPE).data())
+        copied_components_for_mode = []
+        for component_data in copied_components:
+            component_class = ut.get_class_by_name(component_data["class"])
+            if component_class and (self._scene_mode is not SceneMode.NORMAL or component_class is ElementItem):
+                copied_components_for_mode.append(component_data)
+
+        self._paste_copied_components(copied_components_for_mode)
 
     def set_view_mode(self, mode: ViewMode) -> None:
         """
