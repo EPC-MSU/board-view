@@ -11,9 +11,9 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
-    Z_DESCRIPTION: float = 3
-    Z_PIN: float = 2
-    Z_RECT: float = 1
+    Z_DESCRIPTION: float = 1
+    Z_PIN: float = 3
+    Z_RECT: float = 2
 
     def __init__(self, rect: QRectF, name: str) -> None:
         """
