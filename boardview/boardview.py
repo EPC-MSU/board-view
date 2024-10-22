@@ -1,12 +1,14 @@
 import json
-from typing import List, Optional, Union
+from typing import Optional, Union
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
-from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent, utils as ut
+from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent
 from PyQtExtendedScene.scenemode import SceneMode
+from PyQtExtendedScene.utils import get_class_by_name
+from . import utils as ut
 from .elementitem import ElementItem
 from .viewmode import ViewMode
 
@@ -70,8 +72,8 @@ class BoardView(ExtendedScene):
         super().mouseMoveEvent(event)
         for item in self._components_in_operation:
             if isinstance(item, PointComponent) and not rect_item.contains_point(item):
-                pos = get_valid_position_for_point_inside_rect(item.scenePos(),
-                                                               rect_item.mapRectToScene(rect_item.boundingRect()))
+                pos = ut.get_valid_position_for_point_inside_rect(item.scenePos(),
+                                                                  rect_item.mapRectToScene(rect_item.boundingRect()))
                 item.setPos(pos)
 
     def _drag_rect_component_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
@@ -87,7 +89,7 @@ class BoardView(ExtendedScene):
         super().mouseMoveEvent(event)
         rect_after = rect_item.mapRectToScene(rect_item.boundingRect())
         for item, pos in points_before.items():
-            new_pos = get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
+            new_pos = ut.get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
             item.setPos(new_pos)
 
     def _finish_create_rect_component_by_mouse(self) -> None:
@@ -133,8 +135,8 @@ class BoardView(ExtendedScene):
         if isinstance(self._current_component, PointComponent):
             rect_item = self._get_rect_item_from_components_in_operation()
             if not rect_item.contains_point(self._mouse_pos):
-                pos = get_valid_position_for_point_inside_rect(self._mouse_pos,
-                                                               rect_item.mapRectToScene(rect_item.boundingRect()))
+                pos = ut.get_valid_position_for_point_inside_rect(self._mouse_pos,
+                                                                  rect_item.mapRectToScene(rect_item.boundingRect()))
             else:
                 pos = self._mouse_pos
             self._current_component.setPos(pos)
@@ -163,7 +165,7 @@ class BoardView(ExtendedScene):
             super()._handle_component_resize_by_mouse()
             return
 
-        min_rect = get_min_borders_for_points(points)
+        min_rect = ut.get_min_borders_for_points(points)
         if self._start_mouse_pos.x() < min_rect.left() < self._mouse_pos.x():
             x = min_rect.left()
         elif self._start_mouse_pos.x() > min_rect.right() > self._mouse_pos.x():
@@ -220,7 +222,7 @@ class BoardView(ExtendedScene):
         if isinstance(item, ElementItem):
             item.update_position_after_editing(self._scale)
         elif isinstance(item, ComponentGroup):
-            element_name = get_unique_element_name(self._components)
+            element_name = ut.get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
             self.add_component(element_item)
@@ -274,8 +276,8 @@ class BoardView(ExtendedScene):
             elif isinstance(item, PointComponent):
                 points.append(item.scenePos())
 
-        min_rect_for_points = get_min_borders_for_points(points)
-        max_rect = get_max_rect(min_rect_for_points, *rects)
+        min_rect_for_points = ut.get_min_borders_for_points(points)
+        max_rect = ut.get_max_rect(min_rect_for_points, *rects)
 
         for item in rect_items:
             self._components_in_operation.remove(item)
@@ -336,7 +338,7 @@ class BoardView(ExtendedScene):
         copied_components = json.loads(mime_data.data(ExtendedScene.MIME_TYPE).data())
         copied_components_for_mode = []
         for component_data in copied_components:
-            component_class = ut.get_class_by_name(component_data["class"])
+            component_class = get_class_by_name(component_data["class"])
             if component_class and (self._scene_mode is not SceneMode.NORMAL or component_class is ElementItem):
                 copied_components_for_mode.append(component_data)
 
@@ -363,67 +365,3 @@ class BoardView(ExtendedScene):
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
-
-
-def get_max_rect(*rects: QRectF) -> QRectF:
-    """
-    :param rects: rectangles for which to find the largest rectangle surrounding them.
-    :return: a rectangle surrounding given rectangles.
-    """
-
-    left = min(rect.left() for rect in rects)
-    right = max(rect.right() for rect in rects)
-    top = min(rect.top() for rect in rects)
-    bottom = max(rect.bottom() for rect in rects)
-    return QRectF(left, top, right - left, bottom - top)
-
-
-def get_min_borders_for_points(points: List[QPointF]) -> QRectF:
-    """
-    :param points: list with coordinates of points.
-    :return: the smallest rectangle that contains all the points from the list.
-    """
-
-    x_coords = [point.x() for point in points]
-    x_min, x_max = min(x_coords), max(x_coords)
-    y_coords = [point.y() for point in points]
-    y_min, y_max = min(y_coords), max(y_coords)
-    return QRectF(x_min, y_min, x_max - x_min, y_max - y_min)
-
-
-def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) -> QPointF:
-    """
-    :param point: old point coordinates;
-    :param rel_point_old: old relative point coordinates;
-    :param rel_point_new: new relative point coordinates.
-    :return: new coordinates of the point (the new point is located relative to the new relative point in the same way
-    as the old point is relative to the old relative point).
-    """
-
-    return point - rel_point_old + rel_point_new
-
-
-def get_unique_element_name(items: List[QGraphicsItem]) -> str:
-    """
-    :param items: list of ElementItems.
-    :return: a unique name for ElementItem, which is not found in any of the elements from the list.
-    """
-
-    i = 1
-    name = "UserElement_{}"
-    element_names = {item.name.lower() for item in items if isinstance(item, ElementItem)}
-    while name.format(i).lower() in element_names:
-        i += 1
-    return name.format(i)
-
-
-def get_valid_position_for_point_inside_rect(point: QPointF, rect: QRectF) -> QPointF:
-    """
-    :param point: point coordinates;
-    :param rect: rectangle coordinates.
-    :return: valid position for point inside rectangle.
-    """
-
-    x = min(max(rect.left(), point.x()), rect.right())
-    y = min(max(rect.top(), point.y()), rect.bottom())
-    return QPointF(x, y)

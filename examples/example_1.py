@@ -17,6 +17,7 @@ def main() -> None:
     board_dir = "example_board"
     board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
     board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"))
+    board_view.fit_in_view()
     board_view.show()
 
     app.exec_()

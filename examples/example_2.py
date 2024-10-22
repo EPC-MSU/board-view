@@ -24,6 +24,7 @@ class Dialog(QDialog):
         board_dir = "example_board"
         board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
         self.board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"))
+        self.board_view.fit_in_view()
 
         self.button_no_action = QRadioButton("Обычный режим")
         self.button_no_action.setChecked(True)
