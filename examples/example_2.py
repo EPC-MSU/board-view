@@ -6,12 +6,12 @@ from epcore.filemanager import load_board_from_ufiv
 
 
 try:
+    from boardview import ViewMode
     from boardview.tools.epcorecreator import create_board_view_from_board
-    from boardview.viewmode import ViewMode
 except ImportError:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from boardview import ViewMode
     from boardview.tools.epcorecreator import create_board_view_from_board
-    from boardview.viewmode import ViewMode
 
 
 class Dialog(QDialog):
