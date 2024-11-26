@@ -178,6 +178,14 @@ class ElementItem(ComponentGroup):
         self._description_item.setPos(self._rect_item.scenePos())
         self.addToGroup(self._description_item)
 
+    def set_element_name(self, name: str) -> None:
+        """
+        :param name: element name.
+        """
+
+        self._name = name
+        self.set_element_description()
+
     def set_position_after_paste(self, mouse_pos: QPointF, item_pos: QPointF, left_top: QPointF) -> None:
         """
         :param mouse_pos: mouse position;
