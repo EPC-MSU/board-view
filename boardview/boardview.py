@@ -214,18 +214,22 @@ class BoardView(ExtendedScene):
             self._update_rect_item_after_pasting_in_edit_mode()
 
     @pyqtSlot(QGraphicsItem)
-    def _handle_edited_element_item(self, item: QGraphicsItem) -> None:
+    def _handle_edited_element_item(self, item: QGraphicsItem) -> Optional[ElementItem]:
         """
         :param item: group component after editing.
+        :return: edited element item.
         """
 
         if isinstance(item, ElementItem):
             item.update_position_after_editing(self._scale)
-        elif isinstance(item, ComponentGroup):
+            return item
+
+        if isinstance(item, ComponentGroup):
             element_name = ut.get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
             self.add_component(element_item)
+            return element_item
 
     def _set_resize_mode_for_rect_component(self, item: RectComponent) -> bool:
         """
