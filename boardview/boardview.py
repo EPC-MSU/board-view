@@ -228,7 +228,7 @@ class BoardView(ExtendedScene):
             element_name = ut.get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
-            self.add_component(element_item)
+            self.add_element_item(element_item)
             return element_item
 
     def _set_resize_mode_for_rect_component(self, item: RectComponent) -> bool:
