@@ -7,7 +7,7 @@ from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem
 from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent
 from PyQtExtendedScene.scenemode import SceneMode
-from PyQtExtendedScene.utils import get_class_by_name
+from PyQtExtendedScene.utils import get_class_by_name, send_edited_components_changed_signal
 from . import utils as ut
 from .elementitem import ElementItem
 from .viewmode import ViewMode
@@ -51,16 +51,16 @@ class BoardView(ExtendedScene):
 
         rect_item = self._get_rect_item_from_components_in_operation()
         if rect_item is None:
-            items_to_delete = self._components_in_operation[:]
+            items_to_delete = self._edited_components[:]
         else:
             items_to_delete = []
-            for item in self._components_in_operation:
+            for item in self._edited_components:
                 if isinstance(item, PointComponent) and not rect_item.contains_point(item.pos()):
                     items_to_delete.append(item)
 
         for item in items_to_delete:
             self.remove_component(item)
-            self._components_in_operation.remove(item)
+            self._edited_components.remove(item)
 
     def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
@@ -70,7 +70,7 @@ class BoardView(ExtendedScene):
         """
 
         super().mouseMoveEvent(event)
-        for item in self._components_in_operation:
+        for item in self._edited_components:
             if isinstance(item, PointComponent) and not rect_item.contains_point(item):
                 pos = ut.get_valid_position_for_point_inside_rect(item.scenePos(),
                                                                   rect_item.mapRectToScene(rect_item.boundingRect()))
@@ -83,8 +83,7 @@ class BoardView(ExtendedScene):
         :param rect_item: rectangle item of element.
         """
 
-        points_before = {item: item.scenePos() for item in self._components_in_operation
-                         if isinstance(item, PointComponent)}
+        points_before = {item: item.scenePos() for item in self._edited_components if isinstance(item, PointComponent)}
         rect_before = rect_item.mapRectToScene(rect_item.boundingRect())
         super().mouseMoveEvent(event)
         rect_after = rect_item.mapRectToScene(rect_item.boundingRect())
@@ -98,19 +97,19 @@ class BoardView(ExtendedScene):
         existing pins.
         """
 
-        for item in self._components_in_operation:
+        for item in self._edited_components:
             if isinstance(item, PointComponent) and not self._current_component.contains_point(item):
                 self.scene().removeItem(self._current_component)
                 self._current_component = None
                 return
 
         super()._finish_create_rect_component_by_mouse()
-        rect_items = [item for item in self._components_in_operation if isinstance(item, RectComponent)]
+        rect_items = [item for item in self._edited_components if isinstance(item, RectComponent)]
         if len(rect_items) == 1:
             return
 
         if len(rect_items) == 2:
-            self._components_in_operation.remove(rect_items[0])
+            self._edited_components.remove(rect_items[0])
             self.remove_component(rect_items[0])
 
     def _get_rect_item_from_components_in_operation(self) -> Optional[RectComponent]:
@@ -118,7 +117,7 @@ class BoardView(ExtendedScene):
         :return: rectangular item from the list of items that are in operation.
         """
 
-        rect_items = [item for item in self._components_in_operation if isinstance(item, RectComponent)]
+        rect_items = [item for item in self._edited_components if isinstance(item, RectComponent)]
         if len(rect_items) > 1:
             raise ValueError(f"Too many RectComponents ({len(rect_items)}) in ElementItem")
 
@@ -160,7 +159,7 @@ class BoardView(ExtendedScene):
         remain large enough to contain all existing pins.
         """
 
-        points = [item.pos() for item in self._components_in_operation if isinstance(item, PointComponent)]
+        points = [item.pos() for item in self._edited_components if isinstance(item, PointComponent)]
         if not points:
             super()._handle_component_resize_by_mouse()
             return
@@ -183,6 +182,7 @@ class BoardView(ExtendedScene):
         self._current_component.resize_by_mouse(QPointF(x, y))
 
     @pyqtSlot(BaseComponent, bool)
+    @send_edited_components_changed_signal
     def _handle_deselecting_pasted_component(self, component: BaseComponent, selected: bool) -> None:
         """
         :param component: a component that was pasted after copying and then became unselected;
@@ -207,9 +207,9 @@ class BoardView(ExtendedScene):
                     component.removeFromGroup(item)
                     if isinstance(item, (PointComponent, RectComponent)):
                         self.add_component(item)
-                        self._components_in_operation.append(item)
+                        self._edited_components.append(item)
             else:
-                self._components_in_operation.append(component)
+                self._edited_components.append(component)
 
             self._update_rect_item_after_pasting_in_edit_mode()
 
@@ -273,7 +273,7 @@ class BoardView(ExtendedScene):
         points = []
         rect_items = []
         rects = []
-        for item in self._components_in_operation:
+        for item in self._edited_components:
             if isinstance(item, RectComponent):
                 rect_items.append(item)
                 rects.append(item.mapRectToScene(item.boundingRect()))
@@ -284,12 +284,12 @@ class BoardView(ExtendedScene):
         max_rect = ut.get_max_rect(min_rect_for_points, *rects)
 
         for item in rect_items:
-            self._components_in_operation.remove(item)
+            self._edited_components.remove(item)
             self.remove_component(item)
 
         max_rect_item = RectComponent(QRectF(0, 0, max_rect.width(), max_rect.height()))
         max_rect_item.setPos(max_rect.topLeft())
-        self._components_in_operation.append(max_rect_item)
+        self._edited_components.append(max_rect_item)
         self.add_component(max_rect_item)
 
     def add_element_item(self, element_item: ElementItem) -> None:
@@ -300,6 +300,7 @@ class BoardView(ExtendedScene):
         element_item.show_element_description(self._element_names_to_show)
         self.add_component(element_item)
 
+    @send_edited_components_changed_signal
     def delete_selected_components(self) -> None:
         super().delete_selected_components()
         if self._view_mode is ViewMode.EDIT:
