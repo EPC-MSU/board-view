@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 from PyQt5.QtCore import QPointF, QRectF
-from epcore.elements import Board
+from epcore.elements import Board, Element, Pin
 from boardview import BoardView, ElementItem
 
 
@@ -42,3 +42,17 @@ def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None) ->
             board_view.add_element_item(element_item)
 
     return board_view
+
+
+def create_element_from_graphics_element_item(element_item: ElementItem) -> Element:
+    """
+    :param element_item: a graphic element on the view for which you need to create an element from epcore.
+    :return: created element from epcore.
+    """
+
+    element_data = element_item.convert_to_json()
+    pins = [Pin(pin_x, pin_y) for pin_x, pin_y in element_data["pins"]]
+    element_rect = element_data["rect"]
+    element = Element(pins=pins, name=element_data["name"], bounding_zone=element_rect, width=element_rect[2],
+                      height=element_rect[3], rotation=element_data["rotation"])
+    return element
