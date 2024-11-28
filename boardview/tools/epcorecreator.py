@@ -43,7 +43,7 @@ def create_graphics_element_item_from_element(element: Element, svg_dir: Optiona
     :return: graphics element item.
     """
 
-    if element.bounding_zone:
+    if element.bounding_zone is not None and len(element.bounding_zone):
         x_coords = [x for x, _ in element.bounding_zone]
         y_coords = [y for _, y in element.bounding_zone]
         x_min, x_max = min(x_coords), max(x_coords)
@@ -63,9 +63,10 @@ def create_graphics_element_item_from_element(element: Element, svg_dir: Optiona
         pins = [QPointF(pin.x, pin.y) for pin in element.pins]
         element_item.add_pins(pins)
 
-        svg_file = os.path.join(svg_dir, f"{element.name}.svg")
-        if os.path.exists(svg_file):
-            element_item.set_element_description(svg_file, element.rotation)
+        if svg_dir is not None:
+            svg_file = os.path.join(svg_dir, f"{element.name}.svg")
+            if os.path.exists(svg_file):
+                element_item.set_element_description(svg_file, element.rotation)
 
         return element_item
 
