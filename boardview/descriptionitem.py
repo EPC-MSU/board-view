@@ -55,6 +55,7 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
                                       rect_center.y() - description_center.y())
 
     def _adjust_description_item(self) -> None:
+        self.prepareGeometryChange()
         self._adjust_centers()
         self._description_item.setTransformOriginPoint(self._description_item.boundingRect().center())
         self._rotate_description_item()
@@ -99,7 +100,7 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
     def _scale_description_item(self) -> None:
         self._description_item.setScale(1)  # need to return the original value
         description_rect = self._description_item.mapToScene(self._description_item.boundingRect()).boundingRect()
-        rect = self._rect_item.boundingRect()
+        rect = self._rect_item.rect()
         x_scale = rect.width() / description_rect.width()
         y_scale = rect.height() / description_rect.height()
         self._description_item.setScale(min(x_scale, y_scale))

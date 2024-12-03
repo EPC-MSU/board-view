@@ -172,7 +172,7 @@ class ElementItem(ComponentGroup):
             if self.scene():
                 self.scene().removeItem(self._description_item)
 
-        self._description_item = DescriptionItem(self._rect_item.boundingRect(), name=self._name, svg_file=svg_file,
+        self._description_item = DescriptionItem(self._rect_item.rect(), name=self._name, svg_file=svg_file,
                                                  rotation=rotation)
         self._description_item.setZValue(ElementItem.Z_DESCRIPTION)
         self._description_item.setPos(self._rect_item.scenePos())
@@ -224,7 +224,7 @@ class ElementItem(ComponentGroup):
         self.setPos(pos_for_element_item)
 
         if self._description_item:
-            self._description_item.adjust_rect(self._rect_item.boundingRect())
+            self._description_item.adjust_rect(self._rect_item.rect())
             self._description_item.setPos(self._rect_item.scenePos())
             self.addToGroup(self._description_item)
         else:
