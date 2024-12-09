@@ -349,6 +349,7 @@ class BoardView(ExtendedScene):
 
         self._paste_copied_components(copied_components_for_mode)
 
+    @send_edited_components_changed_signal
     def set_view_mode(self, mode: ViewMode) -> None:
         """
         :param mode: new view mode.
