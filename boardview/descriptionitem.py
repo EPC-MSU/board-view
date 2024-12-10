@@ -15,8 +15,6 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
     BACKGROUND_COLOR: QColor = QColor("black")
     OPACITY: float = 0.7
     TEXT_COLOR: QColor = QColor("white")
-    Z_DESCRIPTION: float = 5
-    Z_RECT: float = 4
 
     def __init__(self, rect: QRectF, *, name: Optional[str] = None, svg_file: Optional[str] = None,
                  rotation: Optional[int] = None) -> None:
@@ -62,20 +60,18 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         self._rotate_description_item()
         self._scale_description_item()
 
-    @staticmethod
-    def _create_rect_item_for_background(rect: QRectF) -> QGraphicsRectItem:
+    def _create_rect_item_for_background(self, rect: QRectF) -> QGraphicsRectItem:
         """
         :param rect: rectangle bounding element.
         :return: graphics rectangle item.
         """
 
         rect_item = QGraphicsRectItem(rect)
-        rect_item.setBrush(QBrush(DescriptionItem.BACKGROUND_COLOR))
-        rect_item.setOpacity(DescriptionItem.OPACITY)
+        rect_item.setBrush(QBrush(self.BACKGROUND_COLOR))
+        rect_item.setOpacity(self.OPACITY)
         return rect_item
 
-    @staticmethod
-    def _create_text_item(name: str) -> QGraphicsTextItem:
+    def _create_text_item(self, name: str) -> QGraphicsTextItem:
         """
         :param name: element name.
         :return: graphics text item.
@@ -85,8 +81,7 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         font = QFont()
         font.setFamily("arial")
         text_item.setFont(font)
-        text_item.setZValue(DescriptionItem.Z_DESCRIPTION)
-        text_item.setDefaultTextColor(DescriptionItem.TEXT_COLOR)
+        text_item.setDefaultTextColor(self.TEXT_COLOR)
         return text_item
 
     def _rotate_description_item(self) -> None:

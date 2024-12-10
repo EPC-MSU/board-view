@@ -25,7 +25,7 @@ class ElementItem(ComponentGroup):
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
         self._rect_item: Optional[RectComponent] = RectComponent(rect)
-        self._rect_item.setZValue(ElementItem.Z_RECT)
+        self._rect_item.setZValue(self.Z_RECT)
         self.addToGroup(self._rect_item)
 
         self.selection_signal.connect(self._set_selection_from_group_to_rect)
@@ -101,7 +101,7 @@ class ElementItem(ComponentGroup):
         for point in pins:
             pin_item = PointComponent()
             pin_item.setPos(point)
-            pin_item.setZValue(ElementItem.Z_PIN)
+            pin_item.setZValue(self.Z_PIN)
             self.addToGroup(pin_item)
 
     def convert_to_json(self) -> Dict[str, Any]:
@@ -174,7 +174,7 @@ class ElementItem(ComponentGroup):
 
         self._description_item = DescriptionItem(self._rect_item.rect(), name=self._name, svg_file=svg_file,
                                                  rotation=rotation)
-        self._description_item.setZValue(ElementItem.Z_DESCRIPTION)
+        self._description_item.setZValue(self.Z_DESCRIPTION)
         self._description_item.setPos(self._rect_item.scenePos())
         self.addToGroup(self._description_item)
 
