@@ -4,7 +4,7 @@ from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
-from PyQt5.QtWidgets import QGraphicsItem
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent
 from PyQtExtendedScene.scenemode import SceneMode
 from PyQtExtendedScene.utils import get_class_by_name, send_edited_components_changed_signal
@@ -21,11 +21,13 @@ class BoardView(ExtendedScene):
     MIME_TYPE: str = "BoardView_MIME"
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
-                 parent=None) -> None:
+                 parent=None, scene: Optional[QGraphicsScene] = None) -> None:
         """
         :param background: background image;
         :param zoom_speed: zoom speed;
-        :param parent: parent widget.
+        :param parent: parent widget;
+        :param scene: scene for widget. In this argument you need to pass a scene from another widget if you need to
+        display the scene on different widgets at once.
         """
 
         if isinstance(background, Image):
@@ -36,7 +38,7 @@ class BoardView(ExtendedScene):
             self.__q_image: ImageQt = background
             background = QPixmap.fromImage(background)
 
-        super().__init__(background, zoom_speed, parent)
+        super().__init__(background, zoom_speed, parent, scene)
         self._element_names_to_show: bool = True
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._start_mouse_pos: QPointF = QPointF(self._mouse_pos)
