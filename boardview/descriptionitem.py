@@ -1,3 +1,4 @@
+import os.path
 from typing import Any, Dict, Optional
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QBrush, QColor, QFont
@@ -37,11 +38,11 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         self._svg: bool = False
         self._svg_file: Optional[str] = None
-        if svg_file is not None:
+        if svg_file is not None and os.path.exists(svg_file):
             self._description_item: QGraphicsSvgItem = QGraphicsSvgItem(svg_file)
             self._rect_item.hide()
             self._svg = True
-            self._svg_file = svg_file
+            self._svg_file = os.path.abspath(svg_file)
         else:
             self._description_item: QGraphicsTextItem = self._create_text_item(name or "")
         self.addToGroup(self._description_item)
