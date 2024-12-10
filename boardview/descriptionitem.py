@@ -1,4 +1,4 @@
-import os.path
+import os
 from typing import Any, Dict, Optional
 from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QBrush, QColor, QFont
