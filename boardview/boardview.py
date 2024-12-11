@@ -1,5 +1,5 @@
 import json
-from typing import Optional, Union
+from typing import List, Optional, Union
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
@@ -307,6 +307,13 @@ class BoardView(ExtendedScene):
         super().delete_selected_components()
         if self._view_mode is ViewMode.EDIT:
             self._delete_items_in_edit_mode()
+
+    def get_selected_element_items(self) -> List[ElementItem]:
+        """
+        :return: list of selected element items.
+        """
+
+        return [item for item in self.scene().selectedItems() if isinstance(item, ElementItem)]
 
     def hide_element_descriptions(self) -> None:
         self._show_element_descriptions(False)
