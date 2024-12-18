@@ -75,7 +75,7 @@ class BoardView(ExtendedScene):
         for item in self._edited_components:
             if isinstance(item, PointComponent) and not rect_item.contains_point(item):
                 pos = ut.get_valid_position_for_point_inside_rect(item.scenePos(),
-                                                                  rect_item.mapRectToScene(rect_item.boundingRect()))
+                                                                  rect_item.mapRectToScene(rect_item.rect()))
                 item.setPos(pos)
 
     def _drag_rect_component_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
