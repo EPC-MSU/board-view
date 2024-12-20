@@ -41,7 +41,6 @@ class BoardView(ExtendedScene):
         super().__init__(background, zoom_speed, parent, scene)
         self._element_names_to_show: bool = True
         self._element_names_to_show_backup: bool = self._element_names_to_show
-        self._start_mouse_pos: QPointF = QPointF(self._mouse_pos)
         self._view_mode: ViewMode = ViewMode.NORMAL
 
         self.edited_group_component_signal.connect(self._handle_edited_element_item)
@@ -166,22 +165,9 @@ class BoardView(ExtendedScene):
             super()._handle_component_resize_by_mouse()
             return
 
+        self._current_component.resize_by_mouse(QPointF(self._mouse_pos))
         min_rect = ut.get_min_borders_for_points(points)
-        if self._start_mouse_pos.x() < min_rect.left() < self._mouse_pos.x():
-            x = min_rect.left()
-        elif self._start_mouse_pos.x() > min_rect.right() > self._mouse_pos.x():
-            x = min_rect.right()
-        else:
-            x = self._mouse_pos.x()
-
-        if self._start_mouse_pos.y() < min_rect.top() < self._mouse_pos.y():
-            y = min_rect.top()
-        elif self._start_mouse_pos.y() > min_rect.bottom() > self._mouse_pos.y():
-            y = min_rect.bottom()
-        else:
-            y = self._mouse_pos.y()
-
-        self._current_component.resize_by_mouse(QPointF(x, y))
+        self._current_component.resize_to_include_rect(min_rect)
 
     @pyqtSlot(BaseComponent, bool)
     @send_edited_components_changed_signal
@@ -241,7 +227,6 @@ class BoardView(ExtendedScene):
 
         if (isinstance(item, RectComponent) and item.isSelected() and not item.is_in_group() and
                 item.check_in_resize_mode()):
-            self._start_mouse_pos = QPointF(self._mouse_pos)
             item.go_to_resize_mode()
             self._current_component = item
             self._operation = ExtendedScene.Operation.RESIZE_COMPONENT
