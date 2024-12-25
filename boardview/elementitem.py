@@ -1,8 +1,8 @@
 from typing import List, Optional, Tuple, Dict, Any
 from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
-from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent
+from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent, utils as ut
 from .descriptionitem import DescriptionItem
 
 
@@ -11,20 +11,29 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
+    PEN_COLOR: QColor = QColor(0, 0,  255)
+    PEN_WIDTH: float = 2
+    SELECTION_PEN_COLOR: QColor = QColor(0, 120, 255)
     Z_DESCRIPTION: float = 1
     Z_PIN: float = 3
     Z_RECT: float = 2
 
-    def __init__(self, rect: QRectF, name: str) -> None:
+    def __init__(self, rect: QRectF, name: str, pen: Optional[QPen] = None, selection_pen: Optional[QPen] = None,
+                 pin_pen: Optional[QPen] = None) -> None:
         """
         :param rect: element borders;
-        :param name: element name.
+        :param name: element name;
+        :param pen: pen;
+        :param selection_pen: pen for drawing an element when selected;
+        :param pin_pen: pen for drawing element pins.
         """
 
         super().__init__(False, True)
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        self._rect_item: Optional[RectComponent] = RectComponent(rect)
+        self._pen: QPen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
+        self._selection_pen: QPen = selection_pen or ut.create_cosmetic_pen(self.SELECTION_PEN_COLOR, self.PEN_WIDTH)
+        self._rect_item: Optional[RectComponent] = RectComponent(rect, self._pen, lambda: self._selection_pen)
         self._rect_item.setZValue(self.Z_RECT)
         self.addToGroup(self._rect_item)
 
@@ -185,6 +194,13 @@ class ElementItem(ComponentGroup):
 
         self._name = name
         self.set_element_description()
+
+    def set_pen(self, pen: QPen) -> None:
+        """
+        :param pen: new pen.
+        """
+
+        self._pen = pen
 
     def set_position_after_paste(self, mouse_pos: QPointF, item_pos: QPointF, left_top: QPointF) -> None:
         """
