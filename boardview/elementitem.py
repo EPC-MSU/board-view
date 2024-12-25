@@ -31,9 +31,9 @@ class ElementItem(ComponentGroup):
         super().__init__(False, True)
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        pen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
+        self._pen: QPen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
         self._selection_pen: QPen = selection_pen or ut.create_cosmetic_pen(self.SELECTION_PEN_COLOR, self.PEN_WIDTH)
-        self._rect_item: Optional[RectComponent] = RectComponent(rect, pen, lambda: self._selection_pen)
+        self._rect_item: Optional[RectComponent] = RectComponent(rect, self._pen, lambda: self._selection_pen)
         self._rect_item.setZValue(self.Z_RECT)
         self.addToGroup(self._rect_item)
 
@@ -63,7 +63,9 @@ class ElementItem(ComponentGroup):
         """
 
         pins = [QPointF(*pin) for pin in data["pins"]]
-        element_item = ElementItem(QRectF(*data["rect"]), data["name"])
+        pen = ut.create_cosmetic_pen(QColor(data["pen_color"]), data["pen_width"])
+        selection_pen = ut.create_cosmetic_pen(QColor(data["selection_pen_color"]), data["selection_pen_width"])
+        element_item = ElementItem(QRectF(*data["rect"]), data["name"], pen, selection_pen)
         element_item.setPos(QPointF(*data["pos"]))
         element_item.add_pins(pins)
         element_item.set_element_description(svg_file=data["svg_file"], rotation=data["rotation"])
@@ -121,10 +123,14 @@ class ElementItem(ComponentGroup):
         return {**BaseComponent.convert_to_json(self),
                 **self._description_item.get_data_to_copy(),
                 "name": self._name,
+                "pen_color": self._pen.color().rgba(),
+                "pen_width": self._pen.widthF(),
                 "pins": [(item.scenePos().x(), item.scenePos().y()) for item in self.childItems()
                          if isinstance(item, PointComponent)],
                 "pos": (self.scenePos().x(), self.scenePos().y()),
-                "rect": (0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height())}
+                "rect": (0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height()),
+                "selection_pen_color": self._selection_pen.color().rgba(),
+                "selection_pen_width": self._selection_pen.widthF()}
 
     def copy(self) -> Tuple["ElementItem", QPointF]:
         """
@@ -133,7 +139,7 @@ class ElementItem(ComponentGroup):
 
         pins = [item.scenePos() for item in self.childItems() if isinstance(item, PointComponent)]
         rect = QRectF(0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height())
-        element_item = ElementItem(rect, self._name)
+        element_item = ElementItem(rect, self._name, self._pen, self._selection_pen)
         element_item.setPos(self.scenePos())
         element_item.add_pins(pins)
         element_item.set_element_description(**self._description_item.get_data_to_copy())
@@ -200,6 +206,7 @@ class ElementItem(ComponentGroup):
         :param pen: new element pen.
         """
 
+        self._pen = pen
         self._rect_item.set_pen(pen)
 
     def set_position_after_paste(self, mouse_pos: QPointF, item_pos: QPointF, left_top: QPointF) -> None:

@@ -63,7 +63,7 @@ def create_graphics_element_item_from_element(element: Element, svg_dir: Optiona
         pins = [QPointF(pin.x, pin.y) for pin in element.pins]
         element_item.add_pins(pins)
 
-        if svg_dir is not None:
+        if svg_dir is not None and element.set_automatically:
             svg_file = os.path.join(svg_dir, f"{element.name}.svg")
             if os.path.exists(svg_file):
                 element_item.set_element_description(svg_file, element.rotation)
