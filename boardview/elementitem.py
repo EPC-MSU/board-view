@@ -31,9 +31,9 @@ class ElementItem(ComponentGroup):
         super().__init__(False, True)
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        self._pen: QPen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
+        pen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
         self._selection_pen: QPen = selection_pen or ut.create_cosmetic_pen(self.SELECTION_PEN_COLOR, self.PEN_WIDTH)
-        self._rect_item: Optional[RectComponent] = RectComponent(rect, self._pen, lambda: self._selection_pen)
+        self._rect_item: Optional[RectComponent] = RectComponent(rect, pen, lambda: self._selection_pen)
         self._rect_item.setZValue(self.Z_RECT)
         self.addToGroup(self._rect_item)
 
@@ -197,10 +197,10 @@ class ElementItem(ComponentGroup):
 
     def set_pen(self, pen: QPen) -> None:
         """
-        :param pen: new pen.
+        :param pen: new element pen.
         """
 
-        self._pen = pen
+        self._rect_item.set_pen(pen)
 
     def set_position_after_paste(self, mouse_pos: QPointF, item_pos: QPointF, left_top: QPointF) -> None:
         """
