@@ -43,16 +43,17 @@ def create_graphics_element_item_from_element(element: Element, svg_dir: Optiona
     :return: graphics element item.
     """
 
-    if element.bounding_zone is not None and len(element.bounding_zone):
+    if element.width is not None and element.height is not None and element.center:
+        height, width = (element.width, element.height) if element.rotation % 2 else (element.height, element.width)
+        x_min = element.center[0] - height / 2
+        x_max = x_min + height
+        y_min = element.center[1] - width / 2
+        y_max = y_min + width
+    elif element.bounding_zone is not None and len(element.bounding_zone):
         x_coords = [x for x, _ in element.bounding_zone]
         y_coords = [y for _, y in element.bounding_zone]
         x_min, x_max = min(x_coords), max(x_coords)
         y_min, y_max = min(y_coords), max(y_coords)
-    elif element.width is not None and element.height is not None and element.center:
-        x_min = element.center[0] - element.height / 2
-        x_max = x_min + element.height
-        y_min = element.center[1] - element.width / 2
-        y_max = y_min + element.width
     else:
         x_min, x_max = None, None
         y_min, y_max = None, None
