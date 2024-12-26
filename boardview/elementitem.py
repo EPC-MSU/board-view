@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple, Dict, Any
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
-from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent, utils as ut
+from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent, utils as ut, SceneMode
 from .descriptionitem import DescriptionItem
 
 
@@ -11,21 +11,20 @@ class ElementItem(ComponentGroup):
     Class for displaying an element from epcore.
     """
 
-    PEN_COLOR: QColor = QColor(0, 0,  255)
+    PEN_COLOR: QColor = QColor(0, 0, 255)
     PEN_WIDTH: float = 2
     SELECTION_PEN_COLOR: QColor = QColor(0, 120, 255)
     Z_DESCRIPTION: float = 1
     Z_PIN: float = 3
     Z_RECT: float = 2
 
-    def __init__(self, rect: QRectF, name: str, pen: Optional[QPen] = None, selection_pen: Optional[QPen] = None,
-                 pin_pen: Optional[QPen] = None) -> None:
+    def __init__(self, rect: QRectF, name: str, pen: Optional[QPen] = None, selection_pen: Optional[QPen] = None
+                 ) -> None:
         """
         :param rect: element borders;
         :param name: element name;
         :param pen: pen;
-        :param selection_pen: pen for drawing an element when selected;
-        :param pin_pen: pen for drawing element pins.
+        :param selection_pen: pen for drawing an element when selected.
         """
 
         super().__init__(False, True)
