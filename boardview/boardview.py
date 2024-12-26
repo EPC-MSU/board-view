@@ -1,5 +1,6 @@
 import json
 from typing import List, Optional, Union
+import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
@@ -254,6 +255,13 @@ class BoardView(ExtendedScene):
         super().delete_selected_components()
         if self._view_mode is ViewMode.EDIT:
             self._delete_items_in_edit_mode()
+
+    def get_background_image(self) -> Optional[Image]:
+        """
+        :return: background image.
+        """
+
+        return PIL.Image.fromqpixmap(self.background.pixmap()) if self.background else None
 
     def get_selected_element_items(self) -> List[ElementItem]:
         """
