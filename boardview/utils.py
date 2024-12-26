@@ -4,6 +4,37 @@ from PyQt5.QtWidgets import QGraphicsItem
 from .elementitem import ElementItem
 
 
+def calculate_good_position_for_rect_in_background(rect_before: QRectF, rect: QRectF, background_rect: QRectF
+                                                   ) -> QRectF:
+    """
+    :param rect: rectangle to be placed inside the background image;
+    :param background_rect: rectangle bounding the background image.
+    :return: position of the rectangle inside the background.
+    """
+
+    if rect.left() < background_rect.left():
+        left = background_rect.left()
+        right = left + rect_before.width()
+    elif rect.right() > background_rect.right():
+        right = background_rect.right()
+        left = right - rect_before.width()
+    else:
+        left = rect.left()
+        right = rect.right()
+
+    if rect.top() < background_rect.top():
+        top = background_rect.top()
+        bottom = top + rect_before.height()
+    elif rect.bottom() > background_rect.bottom():
+        bottom = background_rect.bottom()
+        top = bottom - rect_before.height()
+    else:
+        top = rect.top()
+        bottom = rect.bottom()
+
+    return QRectF(QPointF(left, top), QPointF(right, bottom))
+
+
 def get_max_rect(*rects: QRectF) -> QRectF:
     """
     :param rects: rectangles for which to find the largest rectangle surrounding them.

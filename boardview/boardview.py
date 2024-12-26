@@ -5,8 +5,7 @@ from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
-from PyQtExtendedScene import BaseComponent, ComponentGroup, ExtendedScene, PointComponent, RectComponent
-from PyQtExtendedScene.scenemode import SceneMode
+from PyQtExtendedScene import ComponentGroup, DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
 from PyQtExtendedScene.utils import get_class_by_name, send_edited_components_changed_signal
 from . import utils as ut
 from .elementitem import ElementItem
@@ -43,6 +42,7 @@ class BoardView(ExtendedScene):
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._view_mode: ViewMode = ViewMode.NORMAL
 
+        self.set_drawing_mode(DrawingMode.ONLY_IN_BACKGROUND)
         self.edited_group_component_signal.connect(self._handle_edited_element_item)
 
     def _delete_items_in_edit_mode(self) -> None:
@@ -85,11 +85,12 @@ class BoardView(ExtendedScene):
         """
 
         points_before = {item: item.scenePos() for item in self._edited_components if isinstance(item, PointComponent)}
-        rect_before = rect_item.mapRectToScene(rect_item.boundingRect())
+        rect_before = rect_item.mapRectToScene(rect_item.rect())
         super().mouseMoveEvent(event)
-        rect_after = rect_item.mapRectToScene(rect_item.boundingRect())
+        self._limit_rect_component_inside_background(rect_item, rect_before)
+
         for item, pos in points_before.items():
-            new_pos = ut.get_new_pos(pos, rect_before.topLeft(), rect_after.topLeft())
+            new_pos = ut.get_new_pos(pos, rect_before.topLeft(), rect_item.pos())
             item.setPos(new_pos)
 
     def _finish_create_rect_component_by_mouse(self) -> None:
@@ -160,46 +161,17 @@ class BoardView(ExtendedScene):
         remain large enough to contain all existing pins.
         """
 
+        rect_before = self._current_component.mapRectToScene(self._current_component.rect())
         points = [item.pos() for item in self._edited_components if isinstance(item, PointComponent)]
         if not points:
             super()._handle_component_resize_by_mouse()
+            self._limit_rect_component_inside_background(self._current_component, rect_before)
             return
 
         self._current_component.resize_by_mouse(QPointF(self._mouse_pos))
         min_rect = ut.get_min_borders_for_points(points)
         self._current_component.resize_to_include_rect(min_rect)
-
-    @pyqtSlot(BaseComponent, bool)
-    @send_edited_components_changed_signal
-    def _handle_deselecting_pasted_component(self, component: BaseComponent, selected: bool) -> None:
-        """
-        :param component: a component that was pasted after copying and then became unselected;
-        :param selected: if False, then the component has become unselected.
-        """
-
-        if self._view_mode is ViewMode.NORMAL:
-            super()._handle_deselecting_pasted_component(component, selected)
-            return
-
-        if selected:
-            return
-
-        if component in self._pasted_components:
-            component.selection_signal.disconnect(self._pasted_components[component])
-            self._pasted_components.pop(component)
-            component.set_scene_mode(self._scene_mode)
-
-            if isinstance(component, ElementItem):
-                self.remove_component(component)
-                for item in component.childItems():
-                    component.removeFromGroup(item)
-                    if isinstance(item, (PointComponent, RectComponent)):
-                        self.add_component(item)
-                        self._edited_components.append(item)
-            else:
-                self._edited_components.append(component)
-
-            self._update_rect_item_after_pasting_in_edit_mode()
+        self._limit_rect_component_inside_background(self._current_component, rect_before)
 
     @pyqtSlot(QGraphicsItem)
     def _handle_edited_element_item(self, item: QGraphicsItem) -> Optional[ElementItem]:
@@ -218,6 +190,19 @@ class BoardView(ExtendedScene):
             self.remove_component(item)
             self.add_element_item(element_item)
             return element_item
+
+    def _limit_rect_component_inside_background(self, rect_item: RectComponent, rect_before: QRectF) -> None:
+        """
+        :param rect_item: RectComponent to be placed inside the background;
+        :param rect_before: component initial position.
+        """
+
+        rect_after = rect_item.mapRectToScene(rect_item.rect())
+        if not self.background.boundingRect().contains(rect_after):
+            rect_after = ut.calculate_good_position_for_rect_in_background(rect_before, rect_after,
+                                                                           self.background.boundingRect())
+            rect_item.setRect(QRectF(QPointF(0, 0), rect_after.size()))
+            rect_item.setPos(rect_after.topLeft())
 
     def _set_resize_mode_for_rect_component(self, item: RectComponent) -> bool:
         """
@@ -255,29 +240,6 @@ class BoardView(ExtendedScene):
             return
 
         super()._start_create_point_component_by_mouse(pos)
-
-    def _update_rect_item_after_pasting_in_edit_mode(self) -> None:
-        points = []
-        rect_items = []
-        rects = []
-        for item in self._edited_components:
-            if isinstance(item, RectComponent):
-                rect_items.append(item)
-                rects.append(item.mapRectToScene(item.boundingRect()))
-            elif isinstance(item, PointComponent):
-                points.append(item.scenePos())
-
-        min_rect_for_points = ut.get_min_borders_for_points(points)
-        max_rect = ut.get_max_rect(min_rect_for_points, *rects)
-
-        for item in rect_items:
-            self._edited_components.remove(item)
-            self.remove_component(item)
-
-        max_rect_item = RectComponent(QRectF(0, 0, max_rect.width(), max_rect.height()))
-        max_rect_item.setPos(max_rect.topLeft())
-        self._edited_components.append(max_rect_item)
-        self.add_component(max_rect_item)
 
     def add_element_item(self, element_item: ElementItem) -> None:
         """
@@ -325,20 +287,19 @@ class BoardView(ExtendedScene):
 
     def paste_copied_components(self) -> None:
         """
-        Method introduces restrictions on pasting copied elements. In normal mode, you can only paste ElementItems and
-        you cannot paste Point/RectComponents.
+        Method introduces restrictions on pasting copied elements. You can only insert ElementItems in normal mode.
         """
 
         clipboard = qApp.instance().clipboard()
         mime_data = clipboard.mimeData()
-        if not mime_data.hasFormat(ExtendedScene.MIME_TYPE):
+        if not mime_data.hasFormat(self.MIME_TYPE):
             return
 
-        copied_components = json.loads(mime_data.data(ExtendedScene.MIME_TYPE).data())
+        copied_components = json.loads(mime_data.data(self.MIME_TYPE).data())
         copied_components_for_mode = []
         for component_data in copied_components:
             component_class = get_class_by_name(component_data["class"])
-            if component_class and (self._scene_mode is not SceneMode.NORMAL or component_class is ElementItem):
+            if self._scene_mode is SceneMode.NORMAL and component_class is ElementItem:
                 copied_components_for_mode.append(component_data)
 
         self._paste_copied_components(copied_components_for_mode)
