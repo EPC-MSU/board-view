@@ -175,22 +175,18 @@ class BoardView(ExtendedScene):
         self._limit_rect_component_inside_background(self._current_component, rect_before)
 
     @pyqtSlot(QGraphicsItem)
-    def _handle_edited_element_item(self, item: QGraphicsItem) -> Optional[ElementItem]:
+    def _handle_edited_element_item(self, item: QGraphicsItem) -> None:
         """
         :param item: group component after editing.
-        :return: edited element item.
         """
 
         if isinstance(item, ElementItem):
             item.update_position_after_editing(self._scale)
-            return item
-
-        if isinstance(item, ComponentGroup):
+        elif isinstance(item, ComponentGroup):
             element_name = ut.get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
             self.add_element_item(element_item)
-            return element_item
 
     def _limit_rect_component_inside_background(self, rect_item: RectComponent, rect_before: QRectF) -> None:
         """
@@ -318,12 +314,7 @@ class BoardView(ExtendedScene):
         :param mode: new view mode.
         """
 
-        if mode is ViewMode.NORMAL:
-            if self._element_names_to_show_backup:
-                self.show_element_descriptions()
-            else:
-                self.hide_element_descriptions()
-        else:
+        if mode is ViewMode.EDIT:
             if self._view_mode is ViewMode.NORMAL:
                 self._element_names_to_show_backup = self._element_names_to_show
             self.hide_element_descriptions()
@@ -331,6 +322,12 @@ class BoardView(ExtendedScene):
         scene_mode = SceneMode.NORMAL if mode is ViewMode.NORMAL else SceneMode.EDIT_GROUP
         self.set_scene_mode(scene_mode)
         self._view_mode = mode
+
+        if mode is ViewMode.NORMAL:
+            if self._element_names_to_show_backup:
+                self.show_element_descriptions()
+            else:
+                self.hide_element_descriptions()
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)

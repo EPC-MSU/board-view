@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple, Dict, Any
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
-from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent, utils as ut, SceneMode
+from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent, utils as ut
 from .descriptionitem import DescriptionItem
 
 
@@ -252,6 +252,7 @@ class ElementItem(ComponentGroup):
         else:
             self.set_element_description()
 
-        self.add_pins([item.scenePos() for item in point_items])
+        for item in point_items:
+            self.addToGroup(item)
 
         self._scale_changed.emit(scale)
