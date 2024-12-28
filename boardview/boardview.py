@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
+from PyQt5.QtCore import QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import ComponentGroup, DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
