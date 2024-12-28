@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import ComponentGroup, DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
@@ -19,6 +19,7 @@ class BoardView(ExtendedScene):
     """
 
     MIME_TYPE: str = "BoardView_MIME"
+    element_item_edited_signal: pyqtSignal = pyqtSignal(ElementItem)
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
                  parent=None, scene: Optional[QGraphicsScene] = None) -> None:
@@ -44,7 +45,7 @@ class BoardView(ExtendedScene):
         self._view_mode: ViewMode = ViewMode.NORMAL
 
         self.set_drawing_mode(DrawingMode.ONLY_IN_BACKGROUND)
-        self.edited_group_component_signal.connect(self._handle_edited_element_item)
+        self.group_component_edited.connect(self._handle_edited_element_item)
 
     def _delete_items_in_edit_mode(self) -> None:
         """
@@ -182,11 +183,13 @@ class BoardView(ExtendedScene):
 
         if isinstance(item, ElementItem):
             item.update_position_after_editing(self._scale)
+            self.element_item_edited_signal.emit(item)
         elif isinstance(item, ComponentGroup):
             element_name = ut.get_unique_element_name(self._components)
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
             self.add_element_item(element_item)
+            self.element_item_edited_signal.emit(element_item)
 
     def _limit_rect_component_inside_background(self, rect_item: RectComponent, rect_before: QRectF) -> None:
         """
