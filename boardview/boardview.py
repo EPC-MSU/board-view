@@ -189,7 +189,6 @@ class BoardView(ExtendedScene):
             element_item = ElementItem.create_from_component_group(item, element_name)
             self.remove_component(item)
             self.add_element_item(element_item)
-            self.element_item_edited_signal.emit(element_item)
             return element_item
 
         return None
