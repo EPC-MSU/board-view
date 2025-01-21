@@ -14,7 +14,7 @@
 2. Запустите пример:
 
    ```bash
-   python example.py
+   python examples/example_1.py
    ```
 
 3. Запустите тесты:
