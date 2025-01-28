@@ -476,6 +476,25 @@ class BoardView(ExtendedScene):
         self.remove_component(element_item)
         self._elements.remove(element_item)
 
+    @send_edited_components_changed_signal
+    def restore_edited_element(self) -> bool:
+        """
+        The method deletes all new edited components.
+        :return: True if the original element item is returned. False if the element item was originally empty.
+        """
+
+        for component in self._edited_components[:]:
+            self.remove_component(component)
+        self._edited_components = []
+
+        if self._edited_group:
+            self._edited_group.show()
+            self._edited_group = None
+            return True
+
+        return False
+
+    @send_edited_components_changed_signal
     def save_edited_element_item_and_show(self, new_element_name: Optional[str] = None) -> Optional[ElementItem]:
         """
         :param new_element_name: new name for the edited element item.
@@ -495,7 +514,6 @@ class BoardView(ExtendedScene):
 
         if element_item:
             element_item.show()
-            element_item.show_element_description(self._element_names_to_show)
             element_item.setFlag(QGraphicsItem.ItemIsMovable, False)
             element_item.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
@@ -504,7 +522,7 @@ class BoardView(ExtendedScene):
 
         for component in self._edited_components:
             self.remove_component(component)
-
+        self._edited_components = []
         self._edited_group = None
         return element_item
 
