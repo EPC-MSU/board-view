@@ -20,8 +20,8 @@ class BoardView(ExtendedScene):
 
     MIME_TYPE: str = "BoardView_MIME"
     PEN_WIDTH: float = 2
-    element_deleted: pyqtSignal = pyqtSignal(int)
-    element_pasted: pyqtSignal = pyqtSignal(int)
+    element_item_deleted: pyqtSignal = pyqtSignal(int)
+    element_item_pasted: pyqtSignal = pyqtSignal(int)
     moved_pins_signal: pyqtSignal = pyqtSignal(list)
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
@@ -268,7 +268,7 @@ class BoardView(ExtendedScene):
         """
 
         if isinstance(deleted_component, ElementItem) and deleted_component in self._elements:
-            self.element_deleted.emit(self._elements.index(deleted_component))
+            self.element_item_deleted.emit(self._elements.index(deleted_component))
             self._elements.remove(deleted_component)
 
     @pyqtSlot(QGraphicsItem)
@@ -279,7 +279,7 @@ class BoardView(ExtendedScene):
 
         if isinstance(pasted_component, ElementItem):
             self._elements.append(pasted_component)
-            self.element_pasted.emit(self._elements.index(pasted_component))
+            self.element_item_pasted.emit(self._elements.index(pasted_component))
 
     def _limit_rect_component_inside_background(self, rect_item: RectComponent, rect_before: QRectF) -> None:
         """
