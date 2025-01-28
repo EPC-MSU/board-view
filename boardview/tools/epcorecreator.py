@@ -5,14 +5,17 @@ from epcore.elements import Board, Element, Pin
 from boardview import BoardView, ElementItem
 
 
-def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None) -> BoardView:
+def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None, point_radius: Optional[float] = None
+                                 ) -> BoardView:
     """
     :param board: epcore board to display;
-    :param svg_dir: path to the folder with svg images of famous elements.
+    :param svg_dir: path to the folder with svg images of famous elements;
+    :param point_radius: radius for displaying points.
     :return: widget that displays the board.
     """
 
     board_view = BoardView(board.image)
+    board_view.set_default_point_component_parameters(point_radius)
 
     for element in board.elements:
         element_item = create_graphics_element_item_from_element(element, svg_dir)
