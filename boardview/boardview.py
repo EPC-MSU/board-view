@@ -1,12 +1,12 @@
 import json
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Set, Union
 import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import QCoreApplication as qApp, QPointF, QRectF
+from PyQt5.QtCore import pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
-from PyQtExtendedScene import ComponentGroup, DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
+from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
 from PyQtExtendedScene.utils import get_class_by_name, send_edited_components_changed_signal
 from . import utils as ut
 from .elementitem import ElementItem
@@ -41,10 +41,66 @@ class BoardView(ExtendedScene):
         super().__init__(background, zoom_speed, parent, scene)
         self._element_names_to_show: bool = True
         self._element_names_to_show_backup: bool = self._element_names_to_show
+        self._elements: List[ElementItem] = []
+        self._deleted_points: Set[PointComponent] = set()
+        self._moved_points: Set[PointComponent] = set()
+        self._points_matching: Dict[PointComponent, PointComponent] = dict()
         self._view_mode: ViewMode = ViewMode.NORMAL
 
         self.set_drawing_mode(DrawingMode.ONLY_IN_BACKGROUND)
-        self.group_component_edited.connect(self._handle_edited_element_item)
+
+    def _connect_signals_in_edit_mode(self) -> None:
+        self.component_deleted.connect(self._consider_deletion_of_point_component_edit_mode)
+        self.component_moved.connect(self._consider_movement_of_point_component_in_edit_mode)
+
+    @pyqtSlot(QGraphicsItem)
+    def _consider_deletion_of_point_component_edit_mode(self, deleted_component: QGraphicsItem) -> None:
+        """
+        :param deleted_component: a component that was deleted by user.
+        """
+
+        if isinstance(deleted_component, PointComponent) and deleted_component in self._points_matching:
+            self._deleted_points.add(deleted_component)
+
+    @pyqtSlot(QGraphicsItem)
+    def _consider_movement_of_point_component_in_edit_mode(self, moved_component: QGraphicsItem) -> None:
+        """
+        :param moved_component: a component that was moved by the user with the mouse.
+        """
+
+        if isinstance(moved_component, PointComponent) and moved_component in self._points_matching:
+            self._moved_points.add(moved_component)
+
+    def _copy_edited_element_item_and_hide(self) -> None:
+        self._deleted_points = set()
+        self._edited_components = []
+        self._moved_points = set()
+        self._points_matching = dict()
+        items = self.scene().selectedItems()
+        self._edited_group = items[0] if len(items) == 1 and isinstance(items[0], ElementItem) else None
+
+        if self._edited_group:
+            copied_rect, copied_points = self._edited_group.copy_rect_component_and_point_components()
+            self.add_component(copied_rect)
+            self._edited_components.append(copied_rect)
+            for i, copied_point in enumerate(copied_points):
+                self.add_component(copied_point)
+                self._edited_components.append(copied_point)
+                self._points_matching[copied_point] = self._edited_group.get_pin(i)
+            self._edited_group.hide()
+
+    def _create_new_element_item_from_existing_items(self) -> Optional[ElementItem]:
+        """
+        :return: new element item.
+        """
+
+        element_name = ut.get_unique_element_name(self._components)
+        element_item = ElementItem.create_from_components(element_name, *self._edited_components)
+        if element_item:
+            self.add_element_item(element_item)
+            return element_item
+
+        return None
 
     def _delete_items_in_edit_mode(self) -> None:
         """
@@ -63,6 +119,10 @@ class BoardView(ExtendedScene):
         for item in items_to_delete:
             self.remove_component(item)
             self._edited_components.remove(item)
+
+    def _disconnect_signals_in_edit_mode(self) -> None:
+        self.component_deleted.disconnect(self._consider_deletion_of_point_component_edit_mode)
+        self.component_moved.disconnect(self._consider_movement_of_point_component_in_edit_mode)
 
     def _drag_point_components_in_element_item(self, event: QMouseEvent, rect_item: RectComponent) -> None:
         """
@@ -174,25 +234,6 @@ class BoardView(ExtendedScene):
         self._current_component.resize_to_include_rect(min_rect)
         self._limit_rect_component_inside_background(self._current_component, rect_before)
 
-    def _handle_edited_element_item(self, item: QGraphicsItem) -> Optional[ElementItem]:
-        """
-        :param item: group component after editing.
-        :return: edited element item.
-        """
-
-        if isinstance(item, ElementItem):
-            item.update_position_after_editing(self._scale)
-            return item
-
-        if isinstance(item, ComponentGroup):
-            element_name = ut.get_unique_element_name(self._components)
-            element_item = ElementItem.create_from_component_group(item, element_name)
-            self.remove_component(item)
-            self.add_element_item(element_item)
-            return element_item
-
-        return None
-
     def _limit_rect_component_inside_background(self, rect_item: RectComponent, rect_before: QRectF) -> None:
         """
         :param rect_item: RectComponent to be placed inside the background;
@@ -205,6 +246,16 @@ class BoardView(ExtendedScene):
                                                                            self.background.boundingRect())
             rect_item.setRect(QRectF(QPointF(0, 0), rect_after.size()))
             rect_item.setPos(rect_after.topLeft())
+
+    def _set_element_items_movable_and_selectable(self, movable_and_selectable: bool) -> None:
+        """
+        :param movable_and_selectable: if True, then element items are made moveable and selectable depending on their
+        attributes 'draggable' and 'selectable'. If False, then element items become unmovable and unselectable.
+        """
+
+        for component in self._elements[:]:
+            component.setFlag(QGraphicsItem.ItemIsMovable, movable_and_selectable and component.draggable)
+            component.setFlag(QGraphicsItem.ItemIsSelectable, movable_and_selectable and component.selectable)
 
     def _set_resize_mode_for_rect_component(self, item: RectComponent) -> bool:
         """
@@ -243,6 +294,43 @@ class BoardView(ExtendedScene):
 
         super()._start_create_point_component_by_mouse(pos)
 
+    def _update_edited_element_item(self) -> None:
+        rect_component = self._get_rect_item_from_components_in_operation()
+        self._edited_group.update_rect(rect_component.mapRectToScene(rect_component.rect()))
+
+        self._moved_points -= self._deleted_points
+
+        for deleted_point in self._deleted_points:
+            if deleted_point in self._points_matching:
+                deleted_pin = self._points_matching[deleted_point]
+                self._edited_group.delete_pin(deleted_pin)
+
+        for component in self._edited_components:
+            if isinstance(component, PointComponent):
+                if component not in self._points_matching:
+                    self._edited_group.add_pin(component.scenePos())
+                else:
+                    moved_pin = self._points_matching[component]
+                    self._edited_group.move_pin(moved_pin, component.scenePos())
+
+        self._edited_group.update_scale(self._scale)
+
+    def _update_edited_element_item_and_show(self) -> None:
+        if self._edited_group and not self._edited_components:
+            self.remove_element_item(self._edited_group)
+        elif self._edited_group and self._edited_components:
+            self._update_edited_element_item()
+        elif not self._edited_group and self._edited_components:
+            self._create_new_element_item_from_existing_items()
+
+        if self._edited_group:
+            self._edited_group.show()
+
+        for component in self._edited_components:
+            self.remove_component(component)
+
+        self._edited_group = None
+
     def add_element_item(self, element_item: ElementItem) -> None:
         """
         :param element_item: element item to be added to the board view.
@@ -250,6 +338,7 @@ class BoardView(ExtendedScene):
 
         element_item.show_element_description(self._element_names_to_show)
         self.add_component(element_item)
+        self._elements.append(element_item)
 
     @send_edited_components_changed_signal
     def delete_selected_components(self) -> None:
@@ -312,6 +401,36 @@ class BoardView(ExtendedScene):
                 copied_components_for_mode.append(component_data)
 
         self._paste_copied_components(copied_components_for_mode)
+
+    def remove_element_item(self, element_item: ElementItem) -> None:
+        """
+        :param element_item: element item to be removed from the board view.
+        """
+
+        self.remove_component(element_item)
+        self._elements.remove(element_item)
+
+    @send_edited_components_changed_signal
+    def set_scene_mode(self, mode: SceneMode) -> None:
+        """
+        :param mode: new scene mode.
+        """
+
+        if mode is self._scene_mode:
+            return
+
+        if mode is SceneMode.EDIT_GROUP:
+            self._connect_signals_in_edit_mode()
+            self._copy_edited_element_item_and_hide()
+            self._set_element_items_movable_and_selectable(False)
+        else:
+            self._disconnect_signals_in_edit_mode()
+            self._update_edited_element_item_and_show()
+            self._set_element_items_movable_and_selectable(True)
+
+        self._scene_mode = mode
+        self.scene_mode_changed.emit(mode)
+        self._set_editable_status_for_components()
 
     @send_edited_components_changed_signal
     def set_view_mode(self, mode: ViewMode) -> None:

@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
@@ -31,8 +31,10 @@ class ElementItem(ComponentGroup):
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
         self._pen: QPen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
+        self._pins: List[PointComponent] = []
         self._selection_pen: QPen = selection_pen or ut.create_cosmetic_pen(self.SELECTION_PEN_COLOR, self.PEN_WIDTH)
-        self._rect_item: Optional[RectComponent] = RectComponent(rect, self._pen, lambda: self._selection_pen)
+        self._rect_item: Optional[RectComponent] = RectComponent(rect, self._pen,
+                                                                 update_pen_for_selection=lambda: self._selection_pen)
         self._rect_item.setZValue(self.Z_RECT)
         self.addToGroup(self._rect_item)
 
@@ -40,18 +42,25 @@ class ElementItem(ComponentGroup):
         self.set_element_description()
 
     @classmethod
-    def create_from_component_group(cls, group: ComponentGroup, name: str) -> "ElementItem":
+    def create_from_components(cls, name: str, *components: BaseComponent) -> Optional["ElementItem"]:
         """
-        :param group: group component from which to create an ElementItem;
-        :param name: element name.
+        :param name: element name;
+        :param components: list of components from which to create an element item.
         :return: new element item.
         """
 
-        rect = group.boundingRect()
+        for component in components:
+            if isinstance(component, RectComponent):
+                rect_component = component
+                break
+        else:
+            return None
+
+        rect = rect_component.rect()
         element_item = cls(QRectF(0, 0, rect.width(), rect.height()), name)
-        element_item.setPos(rect.topLeft())
-        pins = [child_item.pos() for child_item in group.childItems() if isinstance(child_item, PointComponent)]
-        element_item.add_pins(pins)
+        element_item.setPos(rect_component.scenePos())
+        points = [component.scenePos() for component in components if isinstance(component, PointComponent)]
+        element_item.add_pins(points)
         return element_item
 
     @classmethod
@@ -103,16 +112,24 @@ class ElementItem(ComponentGroup):
 
         self._rect_item.set_selected_at_group(selected)
 
-    def add_pins(self, pins: List[QPointF]) -> None:
+    def add_pin(self, point: QPointF) -> None:
         """
-        :param pins: list of element pin coordinates.
+        :param point: the point where to place the pin on the element.
         """
 
-        for point in pins:
-            pin_item = PointComponent()
-            pin_item.setPos(point)
-            pin_item.setZValue(self.Z_PIN)
-            self.addToGroup(pin_item)
+        pin_item = PointComponent()
+        pin_item.setPos(point)
+        pin_item.setZValue(self.Z_PIN)
+        self.addToGroup(pin_item)
+        self._pins.append(pin_item)
+
+    def add_pins(self, points: List[QPointF]) -> None:
+        """
+        :param points: list of coordinates in which to place pins on an element.
+        """
+
+        for point in points:
+            self.add_pin(point)
 
     def convert_to_json(self) -> Dict[str, Any]:
         """
@@ -124,9 +141,8 @@ class ElementItem(ComponentGroup):
                 "name": self._name,
                 "pen_color": self._pen.color().rgba(),
                 "pen_width": self._pen.widthF(),
-                "pins": [(item.scenePos().x(), item.scenePos().y()) for item in self.childItems()
-                         if isinstance(item, PointComponent)],
-                "pos": (self.scenePos().x(), self.scenePos().y()),
+                "pins": [(pin_item.scenePos().x(), pin_item.scenePos().y()) for pin_item in self._pins],
+                "pos": (self._rect_item.scenePos().x(), self._rect_item.scenePos().y()),
                 "rect": (0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height()),
                 "selection_pen_color": self._selection_pen.color().rgba(),
                 "selection_pen_width": self._selection_pen.widthF()}
@@ -136,13 +152,62 @@ class ElementItem(ComponentGroup):
         :return: copied component and its current position.
         """
 
-        pins = [item.scenePos() for item in self.childItems() if isinstance(item, PointComponent)]
+        pins = [pin_item.scenePos() for pin_item in self._pins]
         rect = QRectF(0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height())
         element_item = ElementItem(rect, self._name, self._pen, self._selection_pen)
         element_item.setPos(self.scenePos())
         element_item.add_pins(pins)
         element_item.set_element_description(**self._description_item.get_data_to_copy())
         return element_item, self.scenePos()
+
+    def copy_rect_component_and_point_components(self) -> Tuple[RectComponent, List[PointComponent]]:
+        """
+        :return: RectComponent with the form of the element and a list of PointComponents, which are located at the pin
+        locations.
+        """
+
+        data = self.convert_to_json()
+        rect_component = RectComponent(QRectF(*data["rect"]))
+        rect_component.setPos(self._rect_item.scenePos())
+        point_components = []
+        for pin in data["pins"]:
+            point = PointComponent()
+            point.setPos(*pin)
+            point_components.append(point)
+        return rect_component, point_components
+
+    def delete_pin(self, pin_or_index: Union[PointComponent, int]) -> None:
+        """
+        :param pin_or_index: a pin belonging to an element, or the index of a pin on an element.
+        """
+
+        pin = self.get_pin(pin_or_index)
+        if pin:
+            self._pins.remove(pin)
+            self.removeFromGroup(pin)
+            self.scene().removeItem(pin)
+
+    def get_pin(self, pin_or_index: Union[PointComponent, int]) -> Optional[PointComponent]:
+        """
+        :param pin_or_index: a pin belonging to an element, or the index of a pin on an element.
+        :return: pin item.
+        """
+
+        if isinstance(pin_or_index, PointComponent) and pin_or_index in self._pins:
+            return pin_or_index
+
+        if isinstance(pin_or_index, int):
+            return self._pins[pin_or_index]
+
+        return None
+
+    def get_pin_index(self, pin: PointComponent) -> int:
+        """
+        :param pin: a pin belonging to an element.
+        :return: pin index on the element.
+        """
+
+        return self._pins.index(pin)
 
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         """
@@ -159,6 +224,16 @@ class ElementItem(ComponentGroup):
 
         self._description_item.setOpacity(1)
         super().hoverLeaveEvent(event)
+
+    def move_pin(self, pin_or_index: Union[PointComponent, int], pos: QPointF) -> None:
+        """
+        :param pin_or_index: a pin belonging to an element, or the index of a pin on an element;
+        :param pos: position where to move the pin.
+        """
+
+        pin = self.get_pin(pin_or_index)
+        if pin:
+            pin.setPos(self.mapFromScene(pos))
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget) -> None:
         """
@@ -199,6 +274,21 @@ class ElementItem(ComponentGroup):
 
         self._name = name
         self.set_element_description()
+
+    def set_parameters_for_pin(self, pin_or_index: Union[PointComponent, int], **parameters) -> None:
+        """
+        :param pin_or_index: a pin belonging to an element, or the index of a pin on an element;
+        :param parameters: new parameters for pin.
+        """
+
+        if isinstance(pin_or_index, PointComponent) and pin_or_index in self._pins:
+            pin = pin_or_index
+        elif isinstance(pin_or_index, int):
+            pin = self._pins[pin_or_index]
+        else:
+            raise ValueError("Invalid pin %s for which to set parameters", pin_or_index)
+
+        pin.set_parameters(**parameters)
 
     def set_pen(self, pen: QPen) -> None:
         """
@@ -256,3 +346,21 @@ class ElementItem(ComponentGroup):
             self.addToGroup(item)
 
         self._scale_changed.emit(scale)
+
+    def update_rect(self, new_rect: QRectF) -> None:
+        """
+        :param new_rect: a new rectangle, the shape of which the element should take.
+        """
+
+        self._description_item, self._rect_item, point_items = self._get_child_items()
+
+        new_pos = self.mapFromScene(new_rect.topLeft())
+        new_rect = QRectF(0, 0, new_rect.width(), new_rect.height())
+        self._rect_item.setRect(new_rect)
+        self._rect_item.setPos(new_pos)
+
+        if self._description_item:
+            self._description_item.adjust_rect(new_rect)
+            self._description_item.setPos(new_pos)
+        else:
+            self.set_element_description()
