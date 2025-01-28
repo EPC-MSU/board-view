@@ -366,6 +366,18 @@ class BoardView(ExtendedScene):
         self.add_component(element_item)
         self._elements.append(element_item)
 
+    def check_if_new_element_item_can_be_created(self) -> bool:
+        """
+        :return: True if a new element item can be created from the components (points and rectangles) that are being
+        edited.
+        """
+
+        for item in self._edited_components:
+            if isinstance(item, PointComponent):
+                return True
+
+        return False
+
     def color_pin_as_empty(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
                            ) -> None:
         """
