@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import QColor, QPainter, QPen
+from PyQt5.QtGui import QBrush, QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGraphicsSceneHoverEvent, QStyle, QStyleOptionGraphicsItem, QWidget
 from PyQtExtendedScene import BaseComponent, ComponentGroup, PointComponent, RectComponent, utils as ut
 from .descriptionitem import DescriptionItem
@@ -112,9 +112,10 @@ class ElementItem(ComponentGroup):
 
         self._rect_item.set_selected_at_group(selected)
 
-    def add_pin(self, point: QPointF) -> None:
+    def add_pin(self, point: QPointF) -> PointComponent:
         """
         :param point: the point where to place the pin on the element.
+        :return: added pin item.
         """
 
         pin_item = PointComponent()
@@ -122,6 +123,7 @@ class ElementItem(ComponentGroup):
         pin_item.setZValue(self.Z_PIN)
         self.addToGroup(pin_item)
         self._pins.append(pin_item)
+        return pin_item
 
     def add_pins(self, points: List[QPointF]) -> None:
         """
@@ -186,6 +188,13 @@ class ElementItem(ComponentGroup):
             self._pins.remove(pin)
             self.removeFromGroup(pin)
             self.scene().removeItem(pin)
+
+    def get_pins_number(self) -> int:
+        """
+        :return: number of pins on the element.
+        """
+
+        return len(self._pins)
 
     def get_pin(self, pin_or_index: Union[PointComponent, int]) -> Optional[PointComponent]:
         """
@@ -275,20 +284,17 @@ class ElementItem(ComponentGroup):
         self._name = name
         self.set_element_description()
 
-    def set_parameters_for_pin(self, pin_or_index: Union[PointComponent, int], **parameters) -> None:
+    def set_parameters_for_all_pins(self, radius: Optional[float] = None, pen: Optional[QPen] = None,
+                                    brush: Optional[QBrush] = None, increase_factor: Optional[float] = None) -> None:
         """
-        :param pin_or_index: a pin belonging to an element, or the index of a pin on an element;
-        :param parameters: new parameters for pin.
+        :param radius: new radius for all pins;
+        :param pen: new pen for all pins;
+        :param brush: new brush for all pins;
+        :param increase_factor: point radius increase factor when selecting a point.
         """
 
-        if isinstance(pin_or_index, PointComponent) and pin_or_index in self._pins:
-            pin = pin_or_index
-        elif isinstance(pin_or_index, int):
-            pin = self._pins[pin_or_index]
-        else:
-            raise ValueError("Invalid pin %s for which to set parameters", pin_or_index)
-
-        pin.set_parameters(**parameters)
+        for pin in self._pins:
+            pin.set_parameters(radius, pen, brush, increase_factor)
 
     def set_pen(self, pen: QPen) -> None:
         """
@@ -297,6 +303,21 @@ class ElementItem(ComponentGroup):
 
         self._pen = pen
         self._rect_item.set_pen(pen)
+
+    def set_pin_parameters(self, pin_or_index: Union[PointComponent, int], radius: Optional[float] = None,
+                           pen: Optional[QPen] = None, brush: Optional[QBrush] = None,
+                           increase_factor: Optional[float] = None) -> None:
+        """
+        :param pin_or_index: a pin belonging to an element, or the index of a pin on an element;
+        :param radius: new radius for pin;
+        :param pen: new pen for pin;
+        :param brush: new brush for pin;
+        :param increase_factor: point radius increase factor when selecting a point.
+        """
+
+        pin = self.get_pin(pin_or_index)
+        if pin:
+            pin.set_parameters(radius, pen, brush, increase_factor)
 
     def set_position_after_paste(self, mouse_pos: QPointF, item_pos: QPointF, left_top: QPointF) -> None:
         """

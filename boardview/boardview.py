@@ -4,10 +4,10 @@ import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
-from PyQt5.QtGui import QMouseEvent, QPixmap
+from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
-from PyQtExtendedScene.utils import get_class_by_name, send_edited_components_changed_signal
+from PyQtExtendedScene.utils import create_cosmetic_pen, get_class_by_name, send_edited_components_changed_signal
 from . import utils as ut
 from .elementitem import ElementItem
 from .viewmode import ViewMode
@@ -19,6 +19,7 @@ class BoardView(ExtendedScene):
     """
 
     MIME_TYPE: str = "BoardView_MIME"
+    PEN_WIDTH: float = 2
     moved_pins_signal: pyqtSignal = pyqtSignal(list)
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
@@ -49,6 +50,25 @@ class BoardView(ExtendedScene):
         self._view_mode: ViewMode = ViewMode.NORMAL
 
         self.set_drawing_mode(DrawingMode.ONLY_IN_BACKGROUND)
+
+    def _color_pin(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int],
+                   color: QColor) -> None:
+        """
+        :param element_or_index: element or index of the element where to color the pin;
+        :param pin_or_index: pin or pin index on the element that needs to be colored;
+        :param color: color.
+        """
+
+        if isinstance(element_or_index, ElementItem) and element_or_index in self._elements:
+            element_item = element_or_index
+        elif isinstance(element_or_index, int) and element_or_index < len(self._elements):
+            element_item = self._elements[element_or_index]
+        else:
+            return
+
+        pen = create_cosmetic_pen(color, self.PEN_WIDTH)
+        brush = QBrush(QColor(32, 223, 223))
+        element_item.set_pin_parameters(pin_or_index, self._point_radius, pen, brush, self._point_increase_factor)
 
     def _connect_signals_in_edit_mode(self) -> None:
         self.component_deleted.connect(self._consider_deletion_of_point_component_edit_mode)
@@ -316,12 +336,26 @@ class BoardView(ExtendedScene):
         for component in self._edited_components:
             if isinstance(component, PointComponent):
                 if component not in self._points_matching:
-                    self._edited_group.add_pin(component.scenePos())
+                    added_pin = self._edited_group.add_pin(component.scenePos())
+                    self._edited_group.set_pin_parameters(added_pin, radius=self._point_radius,
+                                                          increase_factor=self._point_increase_factor)
                 else:
                     moved_pin = self._points_matching[component]
                     self._edited_group.move_pin(moved_pin, component.scenePos())
 
         self._edited_group.update_scale(self._scale)
+
+    def add_component(self, component: QGraphicsItem) -> None:
+        """
+        :param component: component to be added to the scene.
+        """
+
+        super().add_component(component)
+        if isinstance(component, ElementItem):
+            component.set_parameters_for_all_pins(radius=self._point_radius,
+                                                  increase_factor=self._point_increase_factor)
+        elif isinstance(component, PointComponent):
+            component.set_parameters(radius=self._point_radius, increase_factor=self._point_increase_factor)
 
     def add_element_item(self, element_item: ElementItem) -> None:
         """
@@ -331,6 +365,33 @@ class BoardView(ExtendedScene):
         element_item.show_element_description(self._element_names_to_show)
         self.add_component(element_item)
         self._elements.append(element_item)
+
+    def color_pin_as_empty(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
+                           ) -> None:
+        """
+        :param element_or_index: element or index of the element where to color the pin as empty;
+        :param pin_or_index: pin or pin index on the element that needs to be colored as empty.
+        """
+
+        self._color_pin(element_or_index, pin_or_index, QColor(255, 0, 255))
+
+    def color_pin_as_matching(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
+                              ) -> None:
+        """
+        :param element_or_index: element or index of the element where to color the pin as matching;
+        :param pin_or_index: pin or pin index on the element that needs to be colored as matching.
+        """
+
+        self._color_pin(element_or_index, pin_or_index, QColor(0, 255, 0))
+
+    def color_pin_as_nonmatching(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
+                                 ) -> None:
+        """
+        :param element_or_index: element or index of the element where to color the pin as non-matching;
+        :param pin_or_index: pin or pin index on the element that needs to be colored as non-matching.
+        """
+
+        self._color_pin(element_or_index, pin_or_index, QColor(255, 0, 0))
 
     @send_edited_components_changed_signal
     def delete_selected_components(self) -> None:
