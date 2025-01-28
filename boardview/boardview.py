@@ -442,6 +442,13 @@ class BoardView(ExtendedScene):
 
         return PIL.Image.fromqpixmap(self.background.pixmap()) if self.background else None
 
+    def get_index_of_selected_element_items(self) -> List[int]:
+        """
+        :return: indices of selected elements.
+        """
+
+        return [self._elements.index(element_item) for element_item in self.get_selected_element_items()]
+
     def get_selected_element_item(self) -> Optional[ElementItem]:
         """
         If only one element is selected, then that element is returned. If several elements are selected or no element
