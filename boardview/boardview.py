@@ -20,6 +20,8 @@ class BoardView(ExtendedScene):
 
     MIME_TYPE: str = "BoardView_MIME"
     PEN_WIDTH: float = 2
+    element_deleted: pyqtSignal = pyqtSignal(int)
+    element_pasted: pyqtSignal = pyqtSignal(int)
     moved_pins_signal: pyqtSignal = pyqtSignal(list)
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
@@ -49,6 +51,8 @@ class BoardView(ExtendedScene):
         self._points_matching: Dict[PointComponent, PointComponent] = dict()
         self._view_mode: ViewMode = ViewMode.NORMAL
 
+        self.component_deleted.connect(self._handle_deletion_of_element_item_using_hotkey)
+        self.component_pasted.connect(self._handle_pasting_of_element_item_using_hotkey)
         self.set_drawing_mode(DrawingMode.ONLY_IN_BACKGROUND)
 
     def _color_pin(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int],
@@ -256,6 +260,26 @@ class BoardView(ExtendedScene):
         min_rect = ut.get_min_borders_for_points(points)
         self._current_component.resize_to_include_rect(min_rect)
         self._limit_rect_component_inside_background(self._current_component, rect_before)
+
+    @pyqtSlot(QGraphicsItem)
+    def _handle_deletion_of_element_item_using_hotkey(self, deleted_component: QGraphicsItem) -> None:
+        """
+        :param deleted_component: deleted component.
+        """
+
+        if isinstance(deleted_component, ElementItem) and deleted_component in self._elements:
+            self.element_deleted.emit(self._elements.index(deleted_component))
+            self._elements.remove(deleted_component)
+
+    @pyqtSlot(QGraphicsItem)
+    def _handle_pasting_of_element_item_using_hotkey(self, pasted_component: QGraphicsItem) -> None:
+        """
+        :param pasted_component: pasted component.
+        """
+
+        if isinstance(pasted_component, ElementItem):
+            self._elements.append(pasted_component)
+            self.element_pasted.emit(self._elements.index(pasted_component))
 
     def _limit_rect_component_inside_background(self, rect_item: RectComponent, rect_before: QRectF) -> None:
         """
