@@ -302,7 +302,7 @@ class ElementItem(ComponentGroup):
         """
 
         self._pen = pen
-        self._rect_item.set_pen(pen)
+        self._rect_item.set_parameters(pen)
 
     def set_pin_parameters(self, pin_or_index: Union[PointComponent, int], radius: Optional[float] = None,
                            pen: Optional[QPen] = None, brush: Optional[QBrush] = None,
