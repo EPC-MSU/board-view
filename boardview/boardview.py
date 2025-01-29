@@ -22,7 +22,6 @@ class BoardView(ExtendedScene):
     PEN_WIDTH: float = 2
     element_item_deleted: pyqtSignal = pyqtSignal(int)
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
-    moved_pins_signal: pyqtSignal = pyqtSignal(list)
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
                  parent=None, scene: Optional[QGraphicsScene] = None) -> None:
@@ -47,7 +46,9 @@ class BoardView(ExtendedScene):
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._elements: List[ElementItem] = []
         self._deleted_points: Set[PointComponent] = set()
+        self._deleted_points_indexes: List[int] = []
         self._moved_points: Set[PointComponent] = set()
+        self._moved_points_indexes: List[int] = []
         self._points_matching: Dict[PointComponent, PointComponent] = dict()
         self._view_mode: ViewMode = ViewMode.NORMAL
 
@@ -106,10 +107,7 @@ class BoardView(ExtendedScene):
             self._moved_points.add(moved_component)
 
     def _copy_edited_element_item_and_hide(self) -> None:
-        self._deleted_points = set()
-        self._edited_components = []
-        self._moved_points = set()
-        self._points_matching = dict()
+        self._reset_containers_for_editing()
         items = self.scene().selectedItems()
         self._edited_group = items[0] if len(items) == 1 and isinstance(items[0], ElementItem) else None
 
@@ -303,6 +301,12 @@ class BoardView(ExtendedScene):
             rect_item.setRect(QRectF(QPointF(0, 0), rect_after.size()))
             rect_item.setPos(rect_after.topLeft())
 
+    def _reset_containers_for_editing(self) -> None:
+        self._deleted_points = set()
+        self._edited_components = []
+        self._moved_points = set()
+        self._points_matching = dict()
+
     def _set_element_items_movable_and_selectable(self, movable_and_selectable: bool) -> None:
         """
         :param movable_and_selectable: if True, then element items are made moveable and selectable depending on their
@@ -352,13 +356,7 @@ class BoardView(ExtendedScene):
     def _update_edited_element_item(self) -> None:
         rect_component = self._get_rect_item_from_components_in_operation()
         self._edited_group.update_rect(rect_component.mapRectToScene(rect_component.rect()))
-
-        self._moved_points -= self._deleted_points
-        indexes_of_moved_pins = []
-        for moved_point in self._moved_points:
-            if moved_point in self._points_matching:
-                indexes_of_moved_pins.append(self._edited_group.get_pin_index(self._points_matching[moved_point]))
-        self.moved_pins_signal.emit(indexes_of_moved_pins)
+        self._update_moved_and_deleted_points_indexes()
 
         for deleted_point in self._deleted_points:
             if deleted_point in self._points_matching:
@@ -376,6 +374,16 @@ class BoardView(ExtendedScene):
                     self._edited_group.move_pin(moved_pin, component.scenePos())
 
         self._edited_group.update_scale(self._scale)
+
+    def _update_moved_and_deleted_points_indexes(self) -> None:
+        self._moved_points -= self._deleted_points
+        self._moved_points_indexes = []
+        for moved_point in self._moved_points:
+            if moved_point in self._points_matching:
+                self._moved_points_indexes.append(self._edited_group.get_pin_index(self._points_matching[moved_point]))
+
+        self._deleted_points_indexes = [self._edited_group.get_pin_index(deleted_point)
+                                        for deleted_point in self._deleted_points]
 
     def add_component(self, component: QGraphicsItem) -> None:
         """
@@ -594,10 +602,11 @@ class BoardView(ExtendedScene):
 
     @send_edited_components_changed_signal
     def save_edited_element_item_and_show(self, new_element_name: Optional[str] = None
-                                          ) -> Tuple[Optional[ElementItem], bool]:
+                                          ) -> Tuple[Optional[ElementItem], bool, List[int], List[int]]:
         """
         :param new_element_name: new name for the edited element item.
-        :return: saved element item and True, if a new element was created. If False, then an existing one was edited.
+        :return: edited element item; True, if a new element was created, and False, if an existing one was edited;
+        list of deleted element pins; list of moved element pins.
         """
 
         if self._edited_group and not self._edited_components:
@@ -622,10 +631,12 @@ class BoardView(ExtendedScene):
 
         for component in self._edited_components:
             self.remove_component(component)
-        self._edited_components = []
         is_new_element = self._edited_group is None
-        self._edited_group = None
-        return element_item, is_new_element
+        deleted_pins_indexes = self._deleted_points_indexes[:]
+        moved_pins_indexes = self._moved_points_indexes[:]
+
+        self._reset_containers_for_editing()
+        return element_item, is_new_element, deleted_pins_indexes, moved_pins_indexes
 
     @send_edited_components_changed_signal
     def set_scene_mode(self, mode: SceneMode) -> None:
