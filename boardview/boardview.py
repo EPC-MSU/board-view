@@ -334,9 +334,8 @@ class BoardView(ExtendedScene):
         """
 
         self._element_names_to_show = show
-        for element in self._components:
-            if isinstance(element, ElementItem):
-                element.show_element_description(show)
+        for element in self._elements:
+            element.show_element_description(show)
 
     def _start_create_point_component_by_mouse(self, pos: QPointF) -> None:
         """
@@ -604,12 +603,13 @@ class BoardView(ExtendedScene):
             element_item = None
 
         if element_item:
-            element_item.show()
+            if new_element_name:
+                element_item.set_element_name(new_element_name)
+
             element_item.setFlag(QGraphicsItem.ItemIsMovable, False)
             element_item.setFlag(QGraphicsItem.ItemIsSelectable, False)
-
-        if element_item and new_element_name:
-            element_item.set_element_name(new_element_name)
+            element_item.show()
+            element_item.show_element_description(self._element_names_to_show)
 
         for component in self._edited_components:
             self.remove_component(component)
