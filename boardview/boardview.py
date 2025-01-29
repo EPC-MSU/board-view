@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
@@ -481,6 +481,14 @@ class BoardView(ExtendedScene):
             element_item = None
         return element_item
 
+    def get_index_of_element_item(self, element_item: ElementItem) -> int:
+        """
+        :param element_item: element item whose index to return.
+        :return: element item index.
+        """
+
+        return self._elements.index(element_item)
+
     def get_index_of_selected_element_items(self) -> List[int]:
         """
         :return: indices of selected elements.
@@ -577,10 +585,11 @@ class BoardView(ExtendedScene):
         return False
 
     @send_edited_components_changed_signal
-    def save_edited_element_item_and_show(self, new_element_name: Optional[str] = None) -> Optional[ElementItem]:
+    def save_edited_element_item_and_show(self, new_element_name: Optional[str] = None
+                                          ) -> Tuple[Optional[ElementItem], bool]:
         """
         :param new_element_name: new name for the edited element item.
-        :return: saved element item.
+        :return: saved element item and True, if a new element was created. If False, then an existing one was edited.
         """
 
         if self._edited_group and not self._edited_components:
@@ -605,8 +614,9 @@ class BoardView(ExtendedScene):
         for component in self._edited_components:
             self.remove_component(component)
         self._edited_components = []
+        is_new_element = self._edited_group is None
         self._edited_group = None
-        return element_item
+        return element_item, is_new_element
 
     @send_edited_components_changed_signal
     def set_scene_mode(self, mode: SceneMode) -> None:
