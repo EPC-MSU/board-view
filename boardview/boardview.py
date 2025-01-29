@@ -426,7 +426,7 @@ class BoardView(ExtendedScene):
         pen = create_cosmetic_pen(QColor(0, 0, 255), 3)
         self._color_element_item(element_or_index, pen)
 
-    def color_pin_as_empty(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
+    def color_pin_as_empty(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int]
                            ) -> None:
         """
         :param element_or_index: element item or index of the element item where to color the pin as empty;
@@ -435,7 +435,16 @@ class BoardView(ExtendedScene):
 
         self._color_pin(element_or_index, pin_or_index, QColor(255, 0, 255))
 
-    def color_pin_as_matching(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
+    def color_pin_as_loss(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int]
+                          ) -> None:
+        """
+        :param element_or_index: element item or index of the element item where to color the pin as loss;
+        :param pin_or_index: pin or pin index on the element item that needs to be colored as loss.
+        """
+
+        self._color_pin(element_or_index, pin_or_index, QColor(255, 165, 0))
+
+    def color_pin_as_matching(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int]
                               ) -> None:
         """
         :param element_or_index: element item or index of the element item where to color the pin as matching;
@@ -444,8 +453,8 @@ class BoardView(ExtendedScene):
 
         self._color_pin(element_or_index, pin_or_index, QColor(0, 255, 0))
 
-    def color_pin_as_nonmatching(self, element_or_index: Union[ElementItem, int], pin_or_index: [PointComponent, int]
-                                 ) -> None:
+    def color_pin_as_nonmatching(self, element_or_index: Union[ElementItem, int],
+                                 pin_or_index: Union[PointComponent, int]) -> None:
         """
         :param element_or_index: element item or index of the element item where to color the pin as non-matching;
         :param pin_or_index: pin or pin index on the element item that needs to be colored as non-matching.
