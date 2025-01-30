@@ -366,7 +366,7 @@ class BoardView(ExtendedScene):
                 self.pin_added.emit(edited_element_item_index, pin_index, component.scenePos())
 
     def _update_deleted_pins_on_edited_element_item(self, edited_element_item_index: int) -> None:
-        for deleted_point in self._deleted_points:
+        for deleted_point in sorted(self._deleted_points, reverse=True):
             if deleted_point in self._points_matching:
                 pin = self._points_matching[deleted_point]
                 pin_index = self._edited_group.get_pin_index(pin)
