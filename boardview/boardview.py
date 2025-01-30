@@ -47,7 +47,6 @@ class BoardView(ExtendedScene):
 
         super().__init__(background, zoom_speed, parent, scene)
         self._element_names_to_show: bool = True
-        self._element_names_to_show_backup: bool = self._element_names_to_show
         self._elements: List[ElementItem] = []
         self._deleted_points: Set[PointComponent] = set()
         self._moved_points: Set[PointComponent] = set()
@@ -677,20 +676,9 @@ class BoardView(ExtendedScene):
         :param mode: new view mode.
         """
 
-        if mode is ViewMode.EDIT:
-            if self._view_mode is ViewMode.NORMAL:
-                self._element_names_to_show_backup = self._element_names_to_show
-            self.hide_element_descriptions()
-
         scene_mode = SceneMode.NORMAL if mode is ViewMode.NORMAL else SceneMode.EDIT_GROUP
         self.set_scene_mode(scene_mode)
         self._view_mode = mode
-
-        if mode is ViewMode.NORMAL:
-            if self._element_names_to_show_backup:
-                self.show_element_descriptions()
-            else:
-                self.hide_element_descriptions()
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)
