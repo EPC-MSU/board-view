@@ -33,9 +33,12 @@ def create_element_from_graphics_element_item(element_item: ElementItem) -> Elem
 
     element_data = element_item.convert_to_json()
     pins = [Pin(pin_x, pin_y) for pin_x, pin_y in element_data["pins"]]
-    element_rect = element_data["rect"]
-    element = Element(pins=pins, name=element_data["name"], bounding_zone=element_rect, width=element_rect[2],
-                      height=element_rect[3], rotation=element_data["rotation"])
+    x, y = element_data["pos"]
+    height = element_data["rect"][3]
+    width = element_data["rect"][2]
+    bounding_rect = [(x, y), (x + width, y), (x + width, y + height), (x, y + height)]
+    element = Element(pins=pins, name=element_data["name"], bounding_zone=bounding_rect, width=width, height=height,
+                      rotation=element_data["rotation"])
     return element
 
 

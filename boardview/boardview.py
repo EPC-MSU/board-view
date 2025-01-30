@@ -22,6 +22,7 @@ class BoardView(ExtendedScene):
     PEN_WIDTH: float = 2
     element_item_deleted: pyqtSignal = pyqtSignal(int)
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
+    element_item_position_edited: pyqtSignal = pyqtSignal(int, QRectF)
     pin_added: pyqtSignal = pyqtSignal(int, int, QPointF)
     pin_deleted: pyqtSignal = pyqtSignal(int, int)
     pin_moved: pyqtSignal = pyqtSignal(int, int, QPointF)
@@ -376,11 +377,13 @@ class BoardView(ExtendedScene):
             self.pin_deleted.emit(edited_element_item_index, deleted_pin_indexes)
 
     def _update_edited_element_item(self) -> None:
-        rect_component = self._get_rect_item_from_components_in_operation()
-        self._edited_group.update_rect(rect_component.mapRectToScene(rect_component.rect()))
-        self._moved_points -= self._deleted_points
-
         edited_element_item_index = self.get_index_of_element_item(self._edited_group)
+        rect_component = self._get_rect_item_from_components_in_operation()
+        new_rect = rect_component.mapRectToScene(rect_component.rect())
+        self._edited_group.update_rect(new_rect)
+        self.element_item_position_edited.emit(edited_element_item_index, new_rect)
+
+        self._moved_points -= self._deleted_points
         self._update_moved_pins_on_edited_element_item(edited_element_item_index)
         self._update_deleted_pins_on_edited_element_item(edited_element_item_index)
         self._update_added_pins_on_edited_element_item(edited_element_item_index)
