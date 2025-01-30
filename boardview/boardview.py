@@ -642,6 +642,7 @@ class BoardView(ExtendedScene):
             self.remove_component(component)
 
         self._reset_containers_for_editing()
+        self._edited_group = None
         element_index = self.get_index_of_element_item(element_item) if element_item else None
         return element_item, element_index
 
