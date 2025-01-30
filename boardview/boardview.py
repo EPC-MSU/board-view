@@ -373,7 +373,7 @@ class BoardView(ExtendedScene):
 
         for deleted_pin_index in sorted(deleted_pin_indexes, reverse=True):
             self._edited_group.delete_pin(deleted_pin_index)
-            self.pin_deleted.emit(edited_element_item_index, deleted_pin_indexes)
+            self.pin_deleted.emit(edited_element_item_index, deleted_pin_index)
 
     def _update_edited_element_item(self) -> None:
         edited_element_item_index = self.get_index_of_element_item(self._edited_group)
