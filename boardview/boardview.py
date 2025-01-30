@@ -49,9 +49,7 @@ class BoardView(ExtendedScene):
         self._element_names_to_show_backup: bool = self._element_names_to_show
         self._elements: List[ElementItem] = []
         self._deleted_points: Set[PointComponent] = set()
-        self._deleted_points_indexes: List[int] = []
         self._moved_points: Set[PointComponent] = set()
-        self._moved_points_indexes: List[int] = []
         self._points_matching: Dict[PointComponent, PointComponent] = dict()
         self._view_mode: ViewMode = ViewMode.NORMAL
 
@@ -366,12 +364,16 @@ class BoardView(ExtendedScene):
                 self.pin_added.emit(edited_element_item_index, pin_index, component.scenePos())
 
     def _update_deleted_pins_on_edited_element_item(self, edited_element_item_index: int) -> None:
-        for deleted_point in sorted(self._deleted_points, reverse=True):
+        deleted_pin_indexes = []
+        for deleted_point in self._deleted_points:
             if deleted_point in self._points_matching:
                 pin = self._points_matching[deleted_point]
                 pin_index = self._edited_group.get_pin_index(pin)
-                self._edited_group.delete_pin(pin)
-                self.pin_deleted.emit(edited_element_item_index, pin_index)
+                deleted_pin_indexes.append(pin_index)
+
+        for deleted_pin_index in sorted(deleted_pin_indexes, reverse=True):
+            self._edited_group.delete_pin(deleted_pin_index)
+            self.pin_deleted.emit(edited_element_item_index, deleted_pin_indexes)
 
     def _update_edited_element_item(self) -> None:
         rect_component = self._get_rect_item_from_components_in_operation()
@@ -610,11 +612,10 @@ class BoardView(ExtendedScene):
 
     @send_edited_components_changed_signal
     def save_edited_element_item_and_show(self, new_element_name: Optional[str] = None
-                                          ) -> Tuple[Optional[ElementItem], bool, List[int], List[int]]:
+                                          ) -> Tuple[Optional[ElementItem], Optional[int]]:
         """
         :param new_element_name: new name for the edited element item.
-        :return: edited element item; True, if a new element was created, and False, if an existing one was edited;
-        list of deleted element pins; list of moved element pins.
+        :return: edited element item and index of this element item.
         """
 
         if self._edited_group and not self._edited_components:
@@ -639,12 +640,10 @@ class BoardView(ExtendedScene):
 
         for component in self._edited_components:
             self.remove_component(component)
-        is_new_element = self._edited_group is None
-        deleted_pins_indexes = self._deleted_points_indexes[:]
-        moved_pins_indexes = self._moved_points_indexes[:]
 
         self._reset_containers_for_editing()
-        return element_item, is_new_element, deleted_pins_indexes, moved_pins_indexes
+        element_index = self.get_index_of_element_item(element_item) if element_item else None
+        return element_item, element_index
 
     @send_edited_components_changed_signal
     def set_scene_mode(self, mode: SceneMode) -> None:
