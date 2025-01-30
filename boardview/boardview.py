@@ -613,10 +613,8 @@ class BoardView(ExtendedScene):
         return False
 
     @send_edited_components_changed_signal
-    def save_edited_element_item_and_show(self, new_element_name: Optional[str] = None
-                                          ) -> Tuple[Optional[ElementItem], Optional[int]]:
+    def save_edited_element_item_and_show(self) -> Tuple[Optional[ElementItem], Optional[int]]:
         """
-        :param new_element_name: new name for the edited element item.
         :return: edited element item and index of this element item.
         """
 
@@ -632,9 +630,6 @@ class BoardView(ExtendedScene):
             element_item = None
 
         if element_item:
-            if new_element_name:
-                element_item.set_element_name(new_element_name)
-
             element_item.setFlag(QGraphicsItem.ItemIsMovable, False)
             element_item.setFlag(QGraphicsItem.ItemIsSelectable, False)
             element_item.show()
