@@ -22,6 +22,9 @@ class BoardView(ExtendedScene):
     PEN_WIDTH: float = 2
     element_item_deleted: pyqtSignal = pyqtSignal(int)
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
+    pin_added: pyqtSignal = pyqtSignal(int, int, QPointF)
+    pin_deleted: pyqtSignal = pyqtSignal(int, int)
+    pin_moved: pyqtSignal = pyqtSignal(int, int, QPointF)
 
     def __init__(self, background: Optional[Union[QPixmap, Image, ImageQt]] = None, zoom_speed: float = 0.001,
                  parent=None, scene: Optional[QGraphicsScene] = None) -> None:
@@ -353,37 +356,42 @@ class BoardView(ExtendedScene):
 
         super()._start_create_point_component_by_mouse(pos)
 
+    def _update_added_pins_on_edited_element_item(self, edited_element_item_index: int) -> None:
+        for component in self._edited_components:
+            if isinstance(component, PointComponent) and component not in self._points_matching:
+                pin = self._edited_group.add_pin(component.scenePos())
+                pin_index = self._edited_group.get_pin_index(pin)
+                self._edited_group.set_pin_parameters(pin, radius=self._point_radius,
+                                                      increase_factor=self._point_increase_factor)
+                self.pin_added.emit(edited_element_item_index, pin_index, component.scenePos())
+
+    def _update_deleted_pins_on_edited_element_item(self, edited_element_item_index: int) -> None:
+        for deleted_point in self._deleted_points:
+            if deleted_point in self._points_matching:
+                pin = self._points_matching[deleted_point]
+                pin_index = self._edited_group.get_pin_index(pin)
+                self._edited_group.delete_pin(pin)
+                self.pin_deleted.emit(edited_element_item_index, pin_index)
+
     def _update_edited_element_item(self) -> None:
         rect_component = self._get_rect_item_from_components_in_operation()
         self._edited_group.update_rect(rect_component.mapRectToScene(rect_component.rect()))
-        self._update_moved_and_deleted_points_indexes()
+        self._moved_points -= self._deleted_points
 
-        for deleted_point in self._deleted_points:
-            if deleted_point in self._points_matching:
-                deleted_pin = self._points_matching[deleted_point]
-                self._edited_group.delete_pin(deleted_pin)
-
-        for component in self._edited_components:
-            if isinstance(component, PointComponent):
-                if component not in self._points_matching:
-                    added_pin = self._edited_group.add_pin(component.scenePos())
-                    self._edited_group.set_pin_parameters(added_pin, radius=self._point_radius,
-                                                          increase_factor=self._point_increase_factor)
-                else:
-                    moved_pin = self._points_matching[component]
-                    self._edited_group.move_pin(moved_pin, component.scenePos())
+        edited_element_item_index = self.get_index_of_element_item(self._edited_group)
+        self._update_moved_pins_on_edited_element_item(edited_element_item_index)
+        self._update_deleted_pins_on_edited_element_item(edited_element_item_index)
+        self._update_added_pins_on_edited_element_item(edited_element_item_index)
 
         self._edited_group.update_scale(self._scale)
 
-    def _update_moved_and_deleted_points_indexes(self) -> None:
-        self._moved_points -= self._deleted_points
-        self._moved_points_indexes = []
+    def _update_moved_pins_on_edited_element_item(self, edited_element_item_index: int) -> None:
         for moved_point in self._moved_points:
             if moved_point in self._points_matching:
-                self._moved_points_indexes.append(self._edited_group.get_pin_index(self._points_matching[moved_point]))
-
-        self._deleted_points_indexes = [self._edited_group.get_pin_index(deleted_point)
-                                        for deleted_point in self._deleted_points]
+                pin = self._points_matching[moved_point]
+                pin_index = self._edited_group.get_pin_index(pin)
+                self._edited_group.move_pin(pin, moved_point.scenePos())
+                self.pin_moved.emit(edited_element_item_index, pin_index, moved_point.scenePos())
 
     def add_component(self, component: QGraphicsItem) -> None:
         """
