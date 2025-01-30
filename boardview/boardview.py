@@ -152,6 +152,7 @@ class BoardView(ExtendedScene):
         for item in items_to_delete:
             self.remove_component(item)
             self._edited_components.remove(item)
+            self.component_deleted.emit(item)
 
     def _disconnect_signals_in_edit_mode(self) -> None:
         self.component_deleted.disconnect(self._consider_deletion_of_point_component_edit_mode)
