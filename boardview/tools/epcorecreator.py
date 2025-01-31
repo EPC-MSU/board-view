@@ -49,7 +49,7 @@ def create_graphics_element_item_from_element(element: Element, svg_dir: Optiona
     :return: graphics element item.
     """
 
-    if element.width is not None and element.height is not None and element.center:
+    if element.width is not None and element.height is not None and element.center is not None:
         height, width = (element.width, element.height) if element.rotation % 2 else (element.height, element.width)
         x_min = element.center[0] - height / 2
         x_max = x_min + height
