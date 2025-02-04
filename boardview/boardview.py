@@ -234,7 +234,7 @@ class BoardView(ExtendedScene):
             rect_item = self._get_rect_item_from_components_in_operation()
             if not rect_item.contains_point(self._mouse_pos):
                 pos = ut.get_valid_position_for_point_inside_rect(self._mouse_pos,
-                                                                  rect_item.mapRectToScene(rect_item.boundingRect()))
+                                                                  rect_item.mapRectToScene(rect_item.rect()))
             else:
                 pos = self._mouse_pos
             self._current_component.setPos(pos)
