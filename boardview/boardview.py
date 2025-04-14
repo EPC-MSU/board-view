@@ -24,7 +24,7 @@ class BoardView(ExtendedScene):
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
     element_item_position_edited: pyqtSignal = pyqtSignal(int, QRectF)
     pin_added: pyqtSignal = pyqtSignal(int, int, QPointF)
-    pin_clicked: pyqtSignal = pyqtSignal(PointComponent)
+    pin_clicked: pyqtSignal = pyqtSignal(int, int)
     pin_deleted: pyqtSignal = pyqtSignal(int, int)
     pin_moved: pyqtSignal = pyqtSignal(int, int, QPointF)
 
@@ -316,8 +316,11 @@ class BoardView(ExtendedScene):
         """
 
         for item in self.items(event.pos()):
-            if isinstance(item, PointComponent):
-                self.pin_clicked.emit(item)
+            if isinstance(item, PointComponent) and isinstance(item.group(), ElementItem):
+                element_item = item.group()
+                element_item_index = self.get_index_of_element_item(element_item)
+                pin_index = element_item.get_pin_index(item)
+                self.pin_clicked.emit(element_item_index, pin_index)
                 return
 
     def _set_element_items_movable_and_selectable(self, movable_and_selectable: bool) -> None:
