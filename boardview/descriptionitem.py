@@ -28,7 +28,7 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         """
 
         QGraphicsItemGroup.__init__(self)
-        BaseComponent.__init__(self, False, False, False)
+        BaseComponent.__init__(self, None, None, False, False, False)
 
         self._rotation: Optional[int] = rotation
         self._rect_item: QGraphicsRectItem = self._create_rect_item_for_background(rect)
