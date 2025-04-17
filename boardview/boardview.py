@@ -19,7 +19,7 @@ class BoardView(ExtendedScene):
     """
 
     MIME_TYPE: str = "BoardView_MIME"
-    PEN_WIDTH: float = 2
+    PEN_WIDTH: float = 0.8
     element_item_deleted: pyqtSignal = pyqtSignal(int)
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
     element_item_position_edited: pyqtSignal = pyqtSignal(int, QRectF)
@@ -468,7 +468,7 @@ class BoardView(ExtendedScene):
         :param element_or_index: element item or index of the element item to color as auto.
         """
 
-        pen = create_pen(QColor(32, 223, 223), 2)
+        pen = create_pen(QColor(32, 223, 223), self.PEN_WIDTH)
         self._color_element_item(element_or_index, pen)
 
     def color_element_item_as_manual(self, element_or_index: Union[ElementItem, int]) -> None:
@@ -476,7 +476,7 @@ class BoardView(ExtendedScene):
         :param element_or_index: element item or index of the element item to color as manual.
         """
 
-        pen = create_pen(QColor(0, 0, 255), 3)
+        pen = create_pen(QColor(0, 0, 255), self.PEN_WIDTH)
         self._color_element_item(element_or_index, pen)
 
     def color_pin_as_empty(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int]
