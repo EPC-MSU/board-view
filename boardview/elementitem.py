@@ -133,6 +133,13 @@ class ElementItem(ComponentGroup):
         for point in points:
             self.add_pin(point)
 
+    def boundingRect(self) -> QRectF:
+        """
+        :return: outer bounds of the ElementItem as a rectangle.
+        """
+
+        return self._rect_item.boundingRect()
+
     def convert_to_json(self) -> Dict[str, Any]:
         """
         :return: dictionary with basic object attributes.
@@ -189,13 +196,6 @@ class ElementItem(ComponentGroup):
             self.removeFromGroup(pin)
             self.scene().removeItem(pin)
 
-    def get_pins_number(self) -> int:
-        """
-        :return: number of pins on the element.
-        """
-
-        return len(self._pins)
-
     def get_pin(self, pin_or_index: Union[PointComponent, int]) -> Optional[PointComponent]:
         """
         :param pin_or_index: a pin belonging to an element, or the index of a pin on an element.
@@ -217,6 +217,13 @@ class ElementItem(ComponentGroup):
         """
 
         return self._pins.index(pin)
+
+    def get_pins_number(self) -> int:
+        """
+        :return: number of pins on the element.
+        """
+
+        return len(self._pins)
 
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         """

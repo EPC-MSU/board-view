@@ -7,7 +7,8 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPointF
 from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPen, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
-from PyQtExtendedScene.utils import create_pen, get_class_by_name, map_length_to_scene, send_edited_components_changed_signal
+from PyQtExtendedScene.utils import (create_pen, get_class_by_name, map_length_to_scene,
+                                     send_edited_components_changed_signal)
 from . import utils as ut
 from .elementitem import ElementItem
 from .viewmode import ViewMode
@@ -336,7 +337,13 @@ class BoardView(ExtendedScene):
         for item in self.items(event.pos()):
             if isinstance(item, PointComponent) and isinstance(item.group(), ElementItem):
                 element_item = item.group()
-                element_item_index = self.get_index_of_element_item(element_item)
+                try:
+                    element_item_index = self.get_index_of_element_item(element_item)
+                except ValueError:
+                    # The element was inserted, but is currently in the selected state, and a click occurred on
+                    # the element's pin
+                    return
+
                 pin_index = element_item.get_pin_index(item)
                 self.pin_clicked.emit(element_item_index, pin_index)
                 return
