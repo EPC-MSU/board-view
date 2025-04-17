@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPointF
 from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPen, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
-from PyQtExtendedScene.utils import create_cosmetic_pen, get_class_by_name, send_edited_components_changed_signal
+from PyQtExtendedScene.utils import create_pen, get_class_by_name, map_length_to_scene, send_edited_components_changed_signal
 from . import utils as ut
 from .elementitem import ElementItem
 from .viewmode import ViewMode
@@ -82,7 +82,7 @@ class BoardView(ExtendedScene):
         if element_item is None:
             return
 
-        pen = create_cosmetic_pen(color, self.PEN_WIDTH)
+        pen = create_pen(color, self.PEN_WIDTH)
         brush = QBrush(QColor(32, 223, 223))
         element_item.set_pin_parameters(pin_or_index, self._point_radius, pen, brush, self._point_increase_factor)
 
@@ -214,6 +214,21 @@ class BoardView(ExtendedScene):
         if len(rect_items) == 2:
             self._edited_components.remove(rect_items[0])
             self.remove_component(rect_items[0])
+
+    def _get_min_zoom_factor(self) -> float:
+        """
+        :return: minimum magnification factor.
+        """
+
+        image_size = self.get_background_size()
+        image_height = image_size.height()
+        image_width = image_size.width()
+        disp_height = map_length_to_scene(self, self.viewport().height())
+        disp_width = map_length_to_scene(self, self.viewport().width())
+        if disp_height > 0 and disp_width > 0 and image_height > 0 and image_width > 0:
+            return min(disp_height / image_height, disp_width / image_width)
+
+        return 1.0
 
     def _get_rect_item_from_components_in_operation(self) -> Optional[RectComponent]:
         """
@@ -453,7 +468,7 @@ class BoardView(ExtendedScene):
         :param element_or_index: element item or index of the element item to color as auto.
         """
 
-        pen = create_cosmetic_pen(QColor(32, 223, 223), 2)
+        pen = create_pen(QColor(32, 223, 223), 2)
         self._color_element_item(element_or_index, pen)
 
     def color_element_item_as_manual(self, element_or_index: Union[ElementItem, int]) -> None:
@@ -461,7 +476,7 @@ class BoardView(ExtendedScene):
         :param element_or_index: element item or index of the element item to color as manual.
         """
 
-        pen = create_cosmetic_pen(QColor(0, 0, 255), 3)
+        pen = create_pen(QColor(0, 0, 255), 3)
         self._color_element_item(element_or_index, pen)
 
     def color_pin_as_empty(self, element_or_index: Union[ElementItem, int], pin_or_index: Union[PointComponent, int]

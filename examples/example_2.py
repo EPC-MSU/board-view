@@ -24,7 +24,7 @@ class Dialog(QDialog):
     def _init_ui(self) -> None:
         board_dir = "example_board"
         board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
-        self.board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"), 10)
+        self.board_view = create_board_view_from_board(board, os.path.join(board_dir, "svg"), 1)
         self.board_view.setBackgroundBrush(QBrush(QColor("white")))
         self.board_view.fit_in_view()
 

@@ -12,7 +12,7 @@ class ElementItem(ComponentGroup):
     """
 
     PEN_COLOR: QColor = QColor(0, 0, 255)
-    PEN_WIDTH: float = 2
+    PEN_WIDTH: float = 0.5
     SELECTION_PEN_COLOR: QColor = QColor(0, 120, 255)
     Z_DESCRIPTION: float = 1
     Z_PIN: float = 3
@@ -30,9 +30,9 @@ class ElementItem(ComponentGroup):
         super().__init__(False, True)
         self._description_item: Optional[DescriptionItem] = None
         self._name: str = name
-        self._pen: QPen = pen or ut.create_cosmetic_pen(self.PEN_COLOR, self.PEN_WIDTH)
+        self._pen: QPen = pen or ut.create_pen(self.PEN_COLOR, self.PEN_WIDTH)
         self._pins: List[PointComponent] = []
-        self._selection_pen: QPen = selection_pen or ut.create_cosmetic_pen(self.SELECTION_PEN_COLOR, self.PEN_WIDTH)
+        self._selection_pen: QPen = selection_pen or ut.create_pen(self.SELECTION_PEN_COLOR, self.PEN_WIDTH)
         self._rect_item: Optional[RectComponent] = RectComponent(rect, self._pen,
                                                                  update_pen_for_selection=lambda: self._selection_pen)
         self._rect_item.setZValue(self.Z_RECT)
@@ -71,8 +71,8 @@ class ElementItem(ComponentGroup):
         """
 
         pins = [QPointF(*pin) for pin in data["pins"]]
-        pen = ut.create_cosmetic_pen(QColor(data["pen_color"]), data["pen_width"])
-        selection_pen = ut.create_cosmetic_pen(QColor(data["selection_pen_color"]), data["selection_pen_width"])
+        pen = ut.create_pen(QColor(data["pen_color"]), data["pen_width"])
+        selection_pen = ut.create_pen(QColor(data["selection_pen_color"]), data["selection_pen_width"])
         element_item = ElementItem(QRectF(*data["rect"]), data["name"], pen, selection_pen)
         element_item.setPos(QPointF(*data["pos"]))
         element_item.add_pins(pins)
