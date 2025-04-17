@@ -145,7 +145,7 @@ class ElementItem(ComponentGroup):
                 "pen_width": self._pen.widthF(),
                 "pins": [(pin_item.scenePos().x(), pin_item.scenePos().y()) for pin_item in self._pins],
                 "pos": (self._rect_item.scenePos().x(), self._rect_item.scenePos().y()),
-                "rect": (0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height()),
+                "rect": (0, 0, self._rect_item.rect().width(), self._rect_item.rect().height()),
                 "selection_pen_color": self._selection_pen.color().rgba(),
                 "selection_pen_width": self._selection_pen.widthF()}
 
@@ -155,7 +155,7 @@ class ElementItem(ComponentGroup):
         """
 
         pins = [pin_item.scenePos() for pin_item in self._pins]
-        rect = QRectF(0, 0, self._rect_item.boundingRect().width(), self._rect_item.boundingRect().height())
+        rect = QRectF(0, 0, self._rect_item.rect().width(), self._rect_item.rect().height())
         element_item = ElementItem(rect, self._name, self._pen, self._selection_pen)
         element_item.setPos(self.scenePos())
         element_item.add_pins(pins)
