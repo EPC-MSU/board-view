@@ -53,12 +53,14 @@ def create_graphics_element_item_from_element(element: Element, svg_dir: Optiona
     :return: graphics element item.
     """
 
+    # TODO: Need to fix conversion from P10 to ufiv in epcore
+    element.width, element.height = element.height, element.width
     if element.width is not None and element.height is not None and element.center is not None:
         height, width = (element.width, element.height) if element.rotation % 2 else (element.height, element.width)
-        x_min = element.center[0] - height / 2
-        x_max = x_min + height
-        y_min = element.center[1] - width / 2
-        y_max = y_min + width
+        x_min = element.center[0] - width / 2
+        x_max = x_min + width
+        y_min = element.center[1] - height / 2
+        y_max = y_min + height
     elif element.bounding_zone is not None and len(element.bounding_zone):
         x_coords = [x for x, _ in element.bounding_zone]
         y_coords = [y for _, y in element.bounding_zone]
