@@ -28,7 +28,7 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         """
 
         QGraphicsItemGroup.__init__(self)
-        BaseComponent.__init__(self, False, False, False)
+        BaseComponent.__init__(self, None, None, False, False, False)
 
         self._rotation: Optional[int] = rotation
         self._rect_item: QGraphicsRectItem = self._create_rect_item_for_background(rect)
@@ -48,7 +48,7 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         self._adjust_description_item()
 
     def _adjust_centers(self) -> None:
-        rect_center = self._rect_item.boundingRect().center()
+        rect_center = self._rect_item.rect().center()
         description_center = self._description_item.boundingRect().center()
         self._description_item.setPos(rect_center.x() - description_center.x(),
                                       rect_center.y() - description_center.y())
@@ -88,8 +88,8 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         if self._svg and self._rotation is not None:
             self._description_item.setRotation(-90 * self._rotation)
         elif not self._svg:
-            height = self._rect_item.boundingRect().height()
-            width = self._rect_item.boundingRect().width()
+            height = self._rect_item.rect().height()
+            width = self._rect_item.rect().width()
             if height > width:
                 self._description_item.setRotation(-90)
 
@@ -108,6 +108,13 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         self._rect_item.setRect(rect)
         self._adjust_description_item()
+
+    def boundingRect(self) -> QRectF:
+        """
+        :return: outer bounds of the DesctiptionItem as a rectangle.
+        """
+
+        return self._rect_item.boundingRect()
 
     def get_data_to_copy(self) -> Dict[str, Any]:
         """

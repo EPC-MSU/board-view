@@ -21,6 +21,10 @@ def create_board_view_from_board(board: Board, svg_dir: Optional[str] = None, po
         element_item = create_graphics_element_item_from_element(element, svg_dir)
         if element_item:
             board_view.add_element_item(element_item)
+            if element.set_automatically:
+                board_view.color_element_item_as_auto(element_item)
+            else:
+                board_view.color_element_item_as_manual(element_item)
 
     return board_view
 
