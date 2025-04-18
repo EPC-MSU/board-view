@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPointF
 from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPen, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
-from PyQtExtendedScene.utils import (create_pen, get_class_by_name, map_length_to_scene,
+from PyQtExtendedScene.utils import (create_pen, get_class_by_name, get_min_zoom_factor,
                                      send_edited_components_changed_signal)
 from . import utils as ut
 from .elementitem import ElementItem
@@ -222,14 +222,7 @@ class BoardView(ExtendedScene):
         """
 
         image_size = self.get_background_size()
-        image_height = image_size.height()
-        image_width = image_size.width()
-        disp_height = map_length_to_scene(self, self.viewport().height())
-        disp_width = map_length_to_scene(self, self.viewport().width())
-        if disp_height > 0 and disp_width > 0 and image_height > 0 and image_width > 0:
-            return min(disp_height / image_height, disp_width / image_width)
-
-        return 1.0
+        return get_min_zoom_factor(self, image_size)
 
     def _get_rect_item_from_components_in_operation(self) -> Optional[RectComponent]:
         """

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="30.829725" height="13.404595" viewBox="0 0 30.829724 13.404595" id="svg10381" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title id="title11005">SMD Ceramic Capacitor</title>
+  <g id="layer1" transform="translate(242.7836,277.80246)">
+    <rect style="fill:#ffffff;fill-opacity:0.69999999999999996;fill-rule:nonzero;stroke:none;opacity:0.7" id="rect10268" width="30.829725" height="13.404595" x="-242.7836" y="-277.80246" ry="0"/>
+    <rect ry="0" y="-277.79593" x="-237.34396" height="13.391524" width="19.950512" id="rect10270" style="fill-opacity: 0.791339; fill-rule: nonzero; stroke: none; opacity: 0.7; fill: rgb(255, 173, 32);"/>
+    <circle style="fill: rgb(255, 251, 0); fill-opacity: 0.72;" cx="-227.278" cy="-271.083" r="5.098"/>
+    <text style="font-size: 4.5px; font-style: normal; font-weight: normal; text-align: center; line-height: 125%; letter-spacing: 0px; word-spacing: 0px; text-anchor: middle; opacity: 0.7; fill: rgb(255, 255, 255); fill-opacity: 1; stroke: none; font-family: Sans; white-space: pre;" x="-227.39072" y="-272.40509" id="text3108"><tspan x="-227.39072" y="-272.40509" id="tspan3112" style="font-size:6px;fill:#ffffff">SMD</tspan></text>
+    <text style="font-size: 6px; font-style: normal; font-weight: normal; line-height: 125%; letter-spacing: 0px; word-spacing: 0px; opacity: 0.7; fill: rgb(0, 0, 0); fill-opacity: 1; stroke: none; font-family: Sans; white-space: pre;" x="-233.392" y="-267.096" id="text3133"><tspan id="tspan3135" x="-233.392" y="-267.096" style="fill: rgb(255, 255, 255); font-size: 6px; word-spacing: 0px;">0603</tspan></text>
+  </g>
+</svg>

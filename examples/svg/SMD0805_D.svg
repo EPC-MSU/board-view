@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="19.106527mm" height="7.2540331mm" viewBox="0 0 67.700293 25.703267" id="svg10381" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title id="title11005">SMD Diode</title>
+  <g id="layer1" transform="translate(271.14459,318.30414)">
+    <rect style="opacity:0.69999999999999996;fill:#ececec;fill-opacity:0.69999999999999996;fill-rule:nonzero;stroke:none" id="rect10268-4-9" width="67.700294" height="25.702442" x="-271.14459" y="-318.30331" ry="0"/>
+    <rect ry="0" y="-318.2908" x="-259.19955" height="25.677378" width="43.810169" id="rect10270-7-0" style="opacity: 0.7; fill-rule: nonzero; stroke: none; fill: rgb(255, 173, 32); fill-opacity: 0.79;"/>
+    <circle style="fill: rgb(255, 251, 0); fill-opacity: 0.72;" cx="-236.981" cy="-306.261" r="9.452"/>
+    <text style="font-size: 10px; font-style: normal; font-weight: normal; line-height: 125%; letter-spacing: 0px; word-spacing: 0px; opacity: 0.7; fill: rgb(255, 255, 255); fill-opacity: 1; stroke: none; font-family: Sans; white-space: pre;" x="-236.331" y="-308.062" id="text3084"><tspan x="-236.331" y="-308.062" id="tspan3088" style="font-size: 10px; text-align: center; text-anchor: middle; fill: rgb(255, 255, 255); word-spacing: 0px;">SMD</tspan></text>
+    <text style="font-size: 6px; font-style: normal; font-weight: normal; line-height: 125%; letter-spacing: 0px; word-spacing: 0px; fill: rgb(0, 0, 0); fill-opacity: 1; stroke: none; font-family: Sans; opacity: 0.7; white-space: pre;" x="-245.657" y="-298.583" id="text3109"><tspan id="tspan3111" x="-245.657" y="-298.583" style="font-size: 9px; opacity: 0.7; fill: rgb(255, 255, 255); word-spacing: 0px;">0805</tspan></text>
+  </g>
+</svg>
