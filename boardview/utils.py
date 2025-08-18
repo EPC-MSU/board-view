@@ -1,5 +1,7 @@
-from typing import List
-from PyQt5.QtCore import QPointF, QRectF
+import logging
+import os
+from typing import List, Optional
+from PyQt5.QtCore import QPointF, QRectF, QTranslator
 from PyQt5.QtWidgets import QGraphicsItem
 from .elementitem import ElementItem
 
@@ -71,6 +73,20 @@ def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) 
     """
 
     return point - rel_point_old + rel_point_new
+
+
+def get_ru_translator() -> Optional[QTranslator]:
+    """
+    :return: Russian translator.
+    """
+
+    translator = QTranslator()
+    if translator.load("translation_ru", os.path.join("boardview", "translation")):
+        logging.info("Russian translator downloaded")
+        return translator
+
+    logging.error("Failed to download Russian translator")
+    return None
 
 
 def get_unique_element_name(items: List[QGraphicsItem]) -> str:

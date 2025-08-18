@@ -3,9 +3,9 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPointF, QRectF
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPoint, QPointF, QRectF, Qt
 from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPen, QPixmap
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QMenu
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
 from PyQtExtendedScene.utils import (create_pen, get_class_by_name, get_min_zoom_factor,
                                      send_edited_components_changed_signal)
@@ -57,7 +57,9 @@ class BoardView(ExtendedScene):
 
         self.component_deleted.connect(self._handle_deletion_of_element_item_using_hotkey)
         self.component_pasted.connect(self._handle_pasting_of_element_item_using_hotkey)
+        self.custom_context_menu_requested.connect(self._show_context_menu_to_create_pin)
         self.set_drawing_mode(DrawingMode.ONLY_IN_BACKGROUND)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
 
     def _color_element_item(self, element_or_index: Union[ElementItem, int], pen: QPen) -> None:
         """
@@ -136,6 +138,15 @@ class BoardView(ExtendedScene):
             return element_item
 
         return None
+
+    @pyqtSlot(QPointF)
+    def _create_point_from_context_menu(self, pos: QPointF) -> None:
+        """
+        :param pos: coordinate where to create a point from the context menu.
+        """
+
+        self._start_create_point_component_by_mouse(pos)
+        self._finish_create_point_component_by_mouse()
 
     def _delete_items_in_edit_mode(self) -> None:
         """
@@ -366,6 +377,23 @@ class BoardView(ExtendedScene):
 
         return False
 
+    @pyqtSlot(QPoint)
+    def _show_context_menu_to_create_pin(self, pos: QPoint) -> None:
+        """
+        :param pos: position in which to show the context menu for creating a pin in edit mode.
+        """
+
+        if self._view_mode is ViewMode.EDIT:
+            point = self.mapToScene(pos)
+            rect_item = self._get_rect_item_from_components_in_operation()
+            if not rect_item or not rect_item.contains_point(point):
+                return
+
+            menu = QMenu()
+            create_pin_action = menu.addAction(qApp.translate("boardview", "Add point\tRButton + Shift"))
+            create_pin_action.triggered.connect(lambda: self._create_point_from_context_menu(point))
+            menu.exec(self.mapToGlobal(pos))
+
     def _show_element_descriptions(self, show: bool) -> None:
         """
         :param show: if True, then need to show the element descriptions.
@@ -586,6 +614,8 @@ class BoardView(ExtendedScene):
         """
 
         self._mouse_pos = self.mapToScene(event.pos())
+        self._determine_if_mouse_moved(event.pos())
+
         if self._operation is ExtendedScene.Operation.CREATE_COMPONENT:
             self._handle_component_creation_by_mouse()
             return
