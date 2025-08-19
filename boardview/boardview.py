@@ -1,10 +1,11 @@
 import json
+import os
 from typing import Dict, List, Optional, Set, Tuple, Union
 import PIL
 from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPoint, QPointF, QRectF, Qt
-from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPen, QPixmap
+from PyQt5.QtGui import QBrush, QColor, QIcon, QMouseEvent, QPen, QPixmap
 from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QMenu
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
 from PyQtExtendedScene.utils import (create_pen, get_class_by_name, get_min_zoom_factor,
@@ -390,7 +391,9 @@ class BoardView(ExtendedScene):
                 return
 
             menu = QMenu()
-            create_pin_action = menu.addAction(qApp.translate("boardview", "Add point\tRButton + Shift"))
+            create_pin_action = menu.addAction(qApp.translate("boardview", "Add point\tRButton+Shift"))
+            icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images", "add_point.png")
+            create_pin_action.setIcon(QIcon(icon_path))
             create_pin_action.triggered.connect(lambda: self._create_point_from_context_menu(point))
             menu.exec(self.mapToGlobal(pos))
 

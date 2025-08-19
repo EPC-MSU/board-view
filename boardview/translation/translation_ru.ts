@@ -4,8 +4,8 @@
     <name>boardview</name>
     <message>
         <location filename="../boardview.py" line="393"/>
-        <source>Add point&#x09;RButton + Shift</source>
-        <translation>Добавить точку&#x09;RButton + Shift</translation>
+        <source>Add point&#x09;RButton+Shift</source>
+        <translation>Добавить точку&#x09;RButton+Shift</translation>
     </message>
 </context>
 </TS>
