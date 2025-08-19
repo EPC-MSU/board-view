@@ -12,7 +12,7 @@ setup(name="boardview",
       python_requires=">=3.6, <=3.8",
       install_requires=[
             "PyQt5>=5.8.2, <=5.15.0",
-            "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene@t-122291#egg=PyQtExtendedScene"
+            "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene@dev-2.0#egg=PyQtExtendedScene"
       ],
       package_data={"boardview": ["images/add_point.png",
                                   "translation/translation_ru.qm"]},
