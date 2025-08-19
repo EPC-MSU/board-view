@@ -7,10 +7,12 @@ from epcore.filemanager import load_board_from_ufiv
 
 
 try:
+    from boardview import utils as ut
     from boardview import ViewMode
     from boardview.tools.epcorecreator import create_board_view_from_board
 except ImportError:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from boardview import utils as ut
     from boardview import ViewMode
     from boardview.tools.epcorecreator import create_board_view_from_board
 
@@ -59,6 +61,7 @@ class Dialog(QDialog):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    ut.install_ru_translator(app)
     window = Dialog()
     window.show()
     app.exec_()

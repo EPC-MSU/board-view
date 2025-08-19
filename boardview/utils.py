@@ -2,8 +2,11 @@ import logging
 import os
 from typing import List, Optional
 from PyQt5.QtCore import QPointF, QRectF, QTranslator
-from PyQt5.QtWidgets import QGraphicsItem
+from PyQt5.QtWidgets import QApplication, QGraphicsItem
 from .elementitem import ElementItem
+
+
+logger = logging.getLogger("boardview")
 
 
 def calculate_good_position_for_rect_in_background(rect_before: QRectF, rect: QRectF, background_rect: QRectF
@@ -81,11 +84,12 @@ def get_ru_translator() -> Optional[QTranslator]:
     """
 
     translator = QTranslator()
-    if translator.load("translation_ru", os.path.join("boardview", "translation")):
-        logging.info("Russian translator downloaded")
+    dir_with_translation = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translation")
+    if translator.load("translation_ru", dir_with_translation):
+        logger.info("Russian translator for boardview is loaded")
         return translator
 
-    logging.error("Failed to download Russian translator")
+    logger.error("Failed to load Russian translator for boardview")
     return None
 
 
@@ -113,3 +117,16 @@ def get_valid_position_for_point_inside_rect(point: QPointF, rect: QRectF) -> QP
     x = min(max(rect.left(), point.x()), rect.right())
     y = min(max(rect.top(), point.y()), rect.bottom())
     return QPointF(x, y)
+
+
+def install_ru_translator(app: QApplication) -> None:
+    """
+    :param app: the application in which to install Russian translator.
+    """
+
+    translator = get_ru_translator()
+    if translator and app.installTranslator(translator):
+        app.boardview_translator = translator
+        logger.info("Russian translator for boardview is installed")
+    else:
+        logger.error("Failed to install Russian translator for boardview")
