@@ -391,7 +391,7 @@ class BoardView(ExtendedScene):
                 return
 
             menu = QMenu()
-            create_pin_action = menu.addAction(qApp.translate("boardview", "Add point\tRButton+Shift"))
+            create_pin_action = menu.addAction(qApp.translate("boardview", "Add point\tShift+Right-click"))
             icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images", "add_point.png")
             create_pin_action.setIcon(QIcon(icon_path))
             create_pin_action.triggered.connect(lambda: self._create_point_from_context_menu(point))
