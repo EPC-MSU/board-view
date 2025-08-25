@@ -546,6 +546,17 @@ class BoardView(ExtendedScene):
 
         self._color_pin(element_or_index, pin_or_index, QColor(255, 0, 0))
 
+    def color_pin_with_reference_signature_only(self, element_or_index: Union[ElementItem, int],
+                                                pin_or_index: Union[PointComponent, int]) -> None:
+        """
+        :param element_or_index: element item or index of the element item where to color the pin that contains only the
+        reference signature;
+        :param pin_or_index: pin or pin index on the element item that needs to be colored as as containing only the
+        reference signature.
+        """
+
+        self._color_pin(element_or_index, pin_or_index, QColor(0, 0, 255))
+
     @send_edited_components_changed_signal
     def delete_selected_components(self) -> None:
         super().delete_selected_components()
