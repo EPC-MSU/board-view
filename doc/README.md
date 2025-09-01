@@ -127,7 +127,7 @@ view.set_view_mode(ViewMode.EDIT)
   view.color_pin_as_empty(element_number, pin_number)
   ```
 
-- раскрасить пин, в котором есть только опорная сигнатура, непохожая на разрыв <span style="color:#FFA500">(RGB = 255;165;0)</span>:
+- раскрасить пин, в котором есть только опорная сигнатура, похожая на разрыв <span style="color:#FFA500">(RGB = 255;165;0)</span>:
 
   ```python
   view.color_pin_as_loss(element_number, pin_number)
