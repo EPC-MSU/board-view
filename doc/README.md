@@ -121,31 +121,31 @@ view.set_view_mode(ViewMode.EDIT)
 
 Пины можно раскрасить с помощью методов:
 
-- раскрасить пин, <span style="color:#FF00FF">как пустой</span> (нет опорной и тестовой сигнатур):
+- раскрасить пин, в котором нет опорной и тестовой сигнатур <span style="color:#FF00FF">(RGB = 255;0;255)</span>:
 
   ```python
   view.color_pin_as_empty(element_number, pin_number)
   ```
 
-- раскрасить пин, <span style="color:#FFA500">как разрыв</span> (есть только опорная сигнатура, которая похожа на разрыв):
+- раскрасить пин, в котором есть только опорная сигнатура, непохожая на разрыв <span style="color:#FFA500">(RGB = 255;165;0)</span>:
 
   ```python
   view.color_pin_as_loss(element_number, pin_number)
   ```
 
-- раскрасить пин, <span style="color:#00FF00">в котором тестовая сигнатура совпадает с опорной</span>:
+- раскрасить пин, в котором тестовая сигнатура совпадает с опорной <span style="color:#00FF00">(RGB = 0;255;0)</span>:
 
   ```python
   view.color_pin_as_matching(element_number, pin_number)
   ```
 
-- раскрасить пин, <span style="color:#FF0000">в котором тестовая сигнатура не совпадает с опорной</span>:
+- раскрасить пин, в котором тестовая сигнатура не совпадает с опорной <span style="color:#FF0000">(RGB = 255;0;0)</span>:
 
   ```python
   view.color_pin_as_nonmatching(element_number, pin_number)
   ```
 
-- раскрасить пин, <span style="color:#0000FF">в котором есть только опорная сигнатура</span>:
+- раскрасить пин, в котором есть только опорная сигнатура <span style="color:#0000FF">(RGB = 0;0;255)</span>:
 
   ```python
   view.color_pin_with_reference_signature_only(element_number, pin_number)
