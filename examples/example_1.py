@@ -18,6 +18,7 @@ def main() -> None:
     board_dir = os.path.join("examples", "bga_board")
     board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
     board_view = create_board_view_from_board(board, os.path.join("examples", "svg"), 1)
+    board_view.enable_default_context_menu()
     board_view.setBackgroundBrush(QBrush(QColor("white")))
     board_view.fit_in_view()
     board_view.show()

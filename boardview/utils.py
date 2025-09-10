@@ -1,8 +1,8 @@
 import logging
-import os
-from typing import List, Optional
-from PyQt5.QtCore import QPointF, QRectF, QTranslator
+from typing import List
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtWidgets import QApplication, QGraphicsItem
+from PyQtExtendedScene import utils as ut
 from .elementitem import ElementItem
 
 
@@ -78,21 +78,6 @@ def get_new_pos(point: QPointF, rel_point_old: QPointF, rel_point_new: QPointF) 
     return point - rel_point_old + rel_point_new
 
 
-def get_ru_translator() -> Optional[QTranslator]:
-    """
-    :return: Russian translator.
-    """
-
-    translator = QTranslator()
-    dir_with_translation = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translation")
-    if translator.load("translation_ru", dir_with_translation):
-        logger.info("Russian translator for boardview is loaded")
-        return translator
-
-    logger.error("Failed to load Russian translator for boardview")
-    return None
-
-
 def get_unique_element_name(items: List[QGraphicsItem]) -> str:
     """
     :param items: list of ElementItems.
@@ -124,9 +109,4 @@ def install_ru_translator(app: QApplication) -> None:
     :param app: the application in which to install Russian translator.
     """
 
-    translator = get_ru_translator()
-    if translator and app.installTranslator(translator):
-        app.boardview_translator = translator
-        logger.info("Russian translator for boardview is installed")
-    else:
-        logger.error("Failed to install Russian translator for boardview")
+    ut.install_ru_translator(app)

@@ -27,6 +27,7 @@ class Dialog(QDialog):
         board_dir = os.path.join("examples", "pcb_board")
         board = load_board_from_ufiv(os.path.join(board_dir, "elements.json"))
         self.board_view = create_board_view_from_board(board, os.path.join("examples", "svg"), 1)
+        self.board_view.enable_default_context_menu()
         self.board_view.setBackgroundBrush(QBrush(QColor("white")))
         self.board_view.fit_in_view()
 

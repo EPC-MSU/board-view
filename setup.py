@@ -14,8 +14,6 @@ setup(name="boardview",
             "PyQt5>=5.8.2, <=5.15.0",
             "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene@dev-2.0#egg=PyQtExtendedScene"
       ],
-      package_data={"boardview": ["images/add_point.png",
-                                  "translation/translation_ru.qm"]},
       classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: MIT License",
