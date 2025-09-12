@@ -379,10 +379,10 @@ class BoardView(ExtendedScene):
             if rect_item and rect_item.contains_point(point):
                 menu_actions.append(self._create_context_menu_action_to_create_pin(pos))
         else:
-            selected_elements = [item for item in self.scene().selectedItems()
-                                 if isinstance(item, ElementItem) and item.flags() & QGraphicsItem.ItemIsMovable]
+            selected_elements = [item for item in self.get_selected_element_items()
+                                 if item.flags() & QGraphicsItem.ItemIsMovable]
             if selected_elements:
-                menu_actions.append(self._create_context_menu_action_to_rotate_selected_components(selected_elements))
+                menu_actions.append(self._create_context_menu_action_to_rotate_selected_components())
 
         if menu_actions:
             menu = QMenu()
@@ -689,6 +689,14 @@ class BoardView(ExtendedScene):
             return True
 
         return False
+
+    def rotate_selected_components(self) -> None:
+        if self._view_mode is not ViewMode.NORMAL:
+            return
+
+        selected_components = [item for item in self.get_selected_element_items()
+                               if item.flags() & QGraphicsItem.ItemIsMovable]
+        self._rotate_components(selected_components)
 
     @send_edited_components_changed_signal
     def save_edited_element_item_and_show(self) -> Tuple[Optional[ElementItem], Optional[int]]:
