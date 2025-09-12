@@ -1,6 +1,6 @@
 import os
 from typing import Any, Dict, Optional
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import QBrush, QColor, QFont, QTransform
 from PyQt5.QtSvg import QGraphicsSvgItem
 from PyQt5.QtWidgets import QGraphicsItemGroup, QGraphicsRectItem, QGraphicsTextItem
@@ -48,17 +48,30 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         self._adjust_description_item()
 
     def _adjust_centers(self) -> None:
-        rect_center = self._rect_item.rect().center()
-        description_center = self._description_item.boundingRect().center()
-        self._description_item.setPos(rect_center.x() - description_center.x(),
-                                      rect_center.y() - description_center.y())
+        for item in (self._rect_item, self._description_item):
+            self.removeFromGroup(item)
+
+        rect_center = self._rect_item.mapToScene(self._rect_item.rect().center())
+        description_center = self._description_item.mapToScene(self._description_item.boundingRect().center())
+        self._description_item.setPos(self._description_item.scenePos() + (rect_center - description_center))
+
+        for item in (self._rect_item, self._description_item):
+            self.addToGroup(item)
 
     def _adjust_description_item(self) -> None:
         self.prepareGeometryChange()
         self._adjust_centers()
-        self._description_item.setTransformOriginPoint(self._description_item.boundingRect().center())
         self._rotate_description_item()
         self._scale_description_item()
+
+    def _change_rotation_angle(self, angle: float) -> None:
+        """
+        :param angle: the angle in degrees by which the item should be rotated clockwise.
+        """
+
+        rotation = self._rotation or 0
+        rotation -= int(angle / 90)
+        self._rotation = ((abs(rotation) // 4) * 4 + rotation) % 4
 
     def _create_rect_item_for_background(self, rect: QRectF) -> QGraphicsRectItem:
         """
@@ -85,6 +98,8 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         return text_item
 
     def _rotate_description_item(self) -> None:
+        self._description_item.setTransformOriginPoint(self._description_item.boundingRect().center())
+
         if self._svg and self._rotation is not None:
             self._description_item.setRotation(-90 * self._rotation)
         elif not self._svg:
@@ -92,6 +107,24 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
             width = self._rect_item.rect().width()
             if height > width:
                 self._description_item.setRotation(-90)
+            else:
+                self._description_item.setRotation(0)
+
+    def _rotate_rect_item(self, angle: float, center: QPointF) -> None:
+        """
+        :param angle: the angle in degrees by which the item should be rotated clockwise;
+        :param center: the point around which the item needs to be rotated.
+        """
+
+        transform = QTransform()
+        transform.translate(center.x(), center.y())
+        transform.rotate(angle)
+        transform.translate(-center.x(), -center.y())
+
+        rect = self._rect_item.mapRectToScene(self._rect_item.rect())
+        rotated_rect = transform.mapRect(rect)
+        self._rect_item.setRect(QRectF(0, 0, rotated_rect.width(), rotated_rect.height()))
+        self._rect_item.setPos(rotated_rect.topLeft())
 
     def _scale_description_item(self) -> None:
         self._description_item.setScale(1)  # need to return the original value
@@ -101,27 +134,20 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         y_scale = rect.height() / description_rect.height()
         self._description_item.setScale(min(x_scale, y_scale))
 
-    def _transform_rect_item(self, transform: QTransform) -> None:
-        """
-        :param transform: transformation to perform on rect_item.
-        """
-
-        self.removeFromGroup(self._rect_item)
-
-        rect = self.mapRectToScene(self._rect_item.rect())
-        rotated_rect = transform.mapRect(rect)
-        self._rect_item.setRect(QRectF(0, 0, rotated_rect.width(), rotated_rect.height()))
-        self._rect_item.setPos(rotated_rect.topLeft())
-
-        self.addToGroup(self._rect_item)
-
     def adjust_rect(self, rect: QRectF) -> None:
         """
         :param rect: a rectangle to the size of which you want to adjust the description item.
         """
 
-        self._rect_item.setRect(rect)
+        for item in (self._rect_item, self._description_item):
+            self.removeFromGroup(item)
+
+        self._rect_item.setRect(QRectF(0, 0, rect.width(), rect.height()))
+        self._rect_item.setPos(rect.topLeft())
         self._adjust_description_item()
+
+        for item in (self._rect_item, self._description_item):
+            self.addToGroup(item)
 
     def boundingRect(self) -> QRectF:
         """
@@ -130,15 +156,6 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         return self._rect_item.boundingRect()
 
-    def change_rotation_angle(self, angle: float) -> None:
-        """
-        :param angle: the angle in degrees by which the item should be rotated clockwise.
-        """
-
-        rotation = self._rotation or 0
-        rotation -= int(angle / 90)
-        self._rotation = ((abs(rotation) // 4) * 4 + rotation) % 4
-
     def get_data_to_copy(self) -> Dict[str, Any]:
         """
         :return: a dictionary with data that can be used to copy a description for an element.
@@ -146,3 +163,31 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         return {"rotation": self._rotation,
                 "svg_file": self._svg_file}
+
+    def rotate_clockwise(self, angle: float, center: QPointF) -> None:
+        """
+        :param angle: the angle in degrees by which the item should be rotated clockwise;
+        :param center: the point around which the item needs to be rotated.
+        """
+
+        self._change_rotation_angle(angle)
+
+        for item in (self._rect_item, self._description_item):
+            self.removeFromGroup(item)
+
+        self._rotate_rect_item(angle, center)
+        self._adjust_centers()
+        self._rotate_description_item()
+
+        for item in (self._rect_item, self._description_item):
+            self.addToGroup(item)
+
+    def setPos(self, pos: QPointF) -> None:
+        for item in (self._rect_item, self._description_item):
+            self.removeFromGroup(item)
+
+        self._rect_item.setPos(pos)
+        self._adjust_centers()
+
+        for item in (self._rect_item, self._description_item):
+            self.addToGroup(item)

@@ -264,25 +264,6 @@ class ElementItem(ComponentGroup):
             option.state &= not QStyle.State_Selected
         super().paint(painter, option, widget)
 
-    def rotate_clockwise(self, angle: float, center: QPointF) -> None:
-        """
-        :param angle: the angle in degrees by which the item should be rotated clockwise;
-        :param center: the point around which the item needs to be rotated.
-        """
-
-        self._description_item, self._rect_item, point_items = self._get_child_items()
-
-        for item in (self._rect_item, *point_items):
-            self.removeFromGroup(item)
-
-        for item in (self._rect_item, *point_items):
-            item.rotate_clockwise(angle, center)
-            self.addToGroup(item)
-
-        self._description_item.change_rotation_angle(angle)
-        self._description_item.adjust_rect(self._rect_item.rect())
-        self._description_item.setPos(self.mapFromScene(self._rect_item.scenePos()))
-
     def set_element_description(self, svg_file: Optional[str] = None, rotation: Optional[int] = None) -> None:
         """
         :param svg_file: path to the svg file with the ideal display of the element;
@@ -366,48 +347,21 @@ class ElementItem(ComponentGroup):
             self._description_item.hide()
         self.setSelected(is_selected_before)
 
-    def update_position_after_editing(self, scale: float) -> None:
-        """
-        :param scale: scale factor.
-        """
-
-        self._description_item, self._rect_item, point_items = self._get_child_items()
-        for item in (self._description_item, self._rect_item, *point_items):
-            if item is not None:
-                self.removeFromGroup(item)
-
-        pos_for_element_item = self._rect_item.scenePos()
-        self.setPos(QPointF(0, 0))
-        self._rect_item.setPos(QPointF(0, 0))
-        self.addToGroup(self._rect_item)
-        self.setPos(pos_for_element_item)
-
-        if self._description_item:
-            self._description_item.adjust_rect(self._rect_item.rect())
-            self._description_item.setPos(self._rect_item.scenePos())
-            self.addToGroup(self._description_item)
-        else:
-            self.set_element_description()
-
-        for item in point_items:
-            self.addToGroup(item)
-
-        self._scale_changed.emit(scale)
-
     def update_rect(self, new_rect: QRectF) -> None:
         """
         :param new_rect: a new rectangle, the shape of which the element should take.
         """
 
-        self._description_item, self._rect_item, point_items = self._get_child_items()
+        for item in (self._rect_item, self._description_item):
+            self.removeFromGroup(item)
 
-        new_pos = self.mapFromScene(new_rect.topLeft())
-        new_rect = QRectF(0, 0, new_rect.width(), new_rect.height())
-        self._rect_item.setRect(new_rect)
-        self._rect_item.setPos(new_pos)
+        self._rect_item.setRect(QRectF(0, 0, new_rect.width(), new_rect.height()))
+        self._rect_item.setPos(new_rect.topLeft())
 
         if self._description_item:
             self._description_item.adjust_rect(new_rect)
-            self._description_item.setPos(new_pos)
         else:
             self.set_element_description()
+
+        for item in (self._rect_item, self._description_item):
+            self.addToGroup(item)
