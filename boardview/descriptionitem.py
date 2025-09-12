@@ -1,6 +1,6 @@
 import os
 from typing import Any, Dict, Optional
-from PyQt5.QtCore import QPointF, QRectF
+from PyQt5.QtCore import QRectF
 from PyQt5.QtGui import QBrush, QColor, QFont, QTransform
 from PyQt5.QtSvg import QGraphicsSvgItem
 from PyQt5.QtWidgets import QGraphicsItemGroup, QGraphicsRectItem, QGraphicsTextItem
@@ -59,11 +59,6 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         self._description_item.setTransformOriginPoint(self._description_item.boundingRect().center())
         self._rotate_description_item()
         self._scale_description_item()
-
-    def _adjust_description_item_to_rotated_rect_item(self) -> None:
-        self.prepareGeometryChange()
-        self._description_item.setTransformOriginPoint(self._description_item.boundingRect().center())
-        self._rotate_description_item()
 
     def _create_rect_item_for_background(self, rect: QRectF) -> QGraphicsRectItem:
         """
@@ -135,6 +130,15 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         return self._rect_item.boundingRect()
 
+    def change_rotation_angle(self, angle: float) -> None:
+        """
+        :param angle: the angle in degrees by which the item should be rotated clockwise.
+        """
+
+        rotation = self._rotation or 0
+        rotation -= int(angle / 90)
+        self._rotation = ((abs(rotation) // 4) * 4 + rotation) % 4
+
     def get_data_to_copy(self) -> Dict[str, Any]:
         """
         :return: a dictionary with data that can be used to copy a description for an element.
@@ -142,18 +146,3 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
 
         return {"rotation": self._rotation,
                 "svg_file": self._svg_file}
-
-    def rotate_clockwise(self, angle: float, center: QPointF) -> None:
-        """
-        :param angle: the angle in degrees by which the item should be rotated clockwise;
-        :param center: the point around which the item needs to be rotated.
-        """
-
-        transform = QTransform()
-        transform.translate(center.x(), center.y())
-        transform.rotate(angle)
-        transform.translate(-center.x(), -center.y())
-
-        self._transform_rect_item(transform)
-        self._rotation -= int(angle / 90)
-        self._adjust_description_item_to_rotated_rect_item()

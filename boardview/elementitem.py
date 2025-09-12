@@ -264,6 +264,25 @@ class ElementItem(ComponentGroup):
             option.state &= not QStyle.State_Selected
         super().paint(painter, option, widget)
 
+    def rotate_clockwise(self, angle: float, center: QPointF) -> None:
+        """
+        :param angle: the angle in degrees by which the item should be rotated clockwise;
+        :param center: the point around which the item needs to be rotated.
+        """
+
+        self._description_item, self._rect_item, point_items = self._get_child_items()
+
+        for item in (self._rect_item, *point_items):
+            self.removeFromGroup(item)
+
+        for item in (self._rect_item, *point_items):
+            item.rotate_clockwise(angle, center)
+            self.addToGroup(item)
+
+        self._description_item.change_rotation_angle(angle)
+        self._description_item.adjust_rect(self._rect_item.rect())
+        self._description_item.setPos(self.mapFromScene(self._rect_item.scenePos()))
+
     def set_element_description(self, svg_file: Optional[str] = None, rotation: Optional[int] = None) -> None:
         """
         :param svg_file: path to the svg file with the ideal display of the element;
