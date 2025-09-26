@@ -183,11 +183,17 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
             self.addToGroup(item)
 
     def setPos(self, pos: QPointF) -> None:
+        """
+        :param pos: the position in which the description item should be placed.
+        """
+
         for item in (self._rect_item, self._description_item):
             self.removeFromGroup(item)
 
-        self._rect_item.setPos(pos)
+        self._rect_item.setPos(QPointF(0, 0))
         self._adjust_centers()
 
         for item in (self._rect_item, self._description_item):
             self.addToGroup(item)
+
+        super().setPos(pos)
