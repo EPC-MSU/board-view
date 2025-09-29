@@ -1,13 +1,13 @@
 import os
 from typing import Any, Dict, Optional
-from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import QBrush, QColor, QFont, QTransform
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QBrush, QColor, QFont
 from PyQt5.QtSvg import QGraphicsSvgItem
-from PyQt5.QtWidgets import QGraphicsItemGroup, QGraphicsRectItem, QGraphicsTextItem
-from PyQtExtendedScene import BaseComponent
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem
+from PyQtExtendedScene import BaseComponent, RectComponent
 
 
-class DescriptionItem(QGraphicsItemGroup, BaseComponent):
+class DescriptionItem:
     """
     Class for displaying the element name or the ideal display of the element.
     """
@@ -15,11 +15,41 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
     BACKGROUND_COLOR: QColor = QColor("black")
     OPACITY: float = 0.7
     TEXT_COLOR: QColor = QColor("white")
+    Z_DESCRIPTION: float = 2
 
-    def __init__(self, rect: QRectF, *, name: Optional[str] = None, svg_file: Optional[str] = None,
+    class GraphicsSvgItem(QGraphicsSvgItem, BaseComponent):
+        """
+        Class for displaying an SVG image as an element description.
+        """
+
+        def __init__(self, *args) -> None:
+            QGraphicsSvgItem.__init__(self, *args)
+            BaseComponent.__init__(self, draggable=False, selectable=False, unique_selection=False)
+
+    class GraphicsTextItem(QGraphicsTextItem, BaseComponent):
+        """
+        Class for displaying text as a description of an element.
+        """
+
+        TEXT_COLOR: QColor = QColor("white")
+
+        def __init__(self, name: str) -> None:
+            """
+            :param name: element name.
+            """
+
+            QGraphicsTextItem.__init__(self, name)
+            BaseComponent.__init__(self, draggable=False, selectable=False, unique_selection=False)
+
+            font = QFont()
+            font.setFamily("arial")
+            self.setFont(font)
+            self.setDefaultTextColor(self.TEXT_COLOR)
+
+    def __init__(self, rect_item: RectComponent, *, name: Optional[str] = None, svg_file: Optional[str] = None,
                  rotation: Optional[int] = None) -> None:
         """
-        :param rect: rectangle bounding element;
+        :param rect_item: rectangle item of the element;
         :param name: element name;
         :param svg_file: path to the svg file with the ideal display of the element;
         :param rotation: each automatically recognized PCB component can be placed on the board in 4 different
@@ -27,42 +57,32 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         placement of component and its picture.
         """
 
-        QGraphicsItemGroup.__init__(self)
-        BaseComponent.__init__(self, None, None, False, False, False)
-
+        self._rect_item: RectComponent = rect_item
         self._rotation: Optional[int] = rotation
-        self._rect_item: QGraphicsRectItem = self._create_rect_item_for_background(rect)
-        self.addToGroup(self._rect_item)
-
         self._svg: bool = False
         self._svg_file: Optional[str] = None
+
         if svg_file is not None and os.path.exists(svg_file):
-            self._description_item: QGraphicsSvgItem = QGraphicsSvgItem(svg_file)
-            self._rect_item.hide()
+            self._description_item: "DescriptionItem.GraphicsSvgItem" = self.GraphicsSvgItem(svg_file)
             self._svg = True
             self._svg_file = os.path.abspath(svg_file)
         else:
-            self._description_item: QGraphicsTextItem = self._create_text_item(name or "")
-        self.addToGroup(self._description_item)
+            self._description_item: "DescriptionItem.GraphicsTextItem" = self.GraphicsTextItem(name or "")
 
-        self._adjust_description_item()
+        self._description_item.setZValue(self.Z_DESCRIPTION)
+
+    @property
+    def item(self) -> QGraphicsItem:
+        """
+        :return: graphics item.
+        """
+
+        return self._description_item
 
     def _adjust_centers(self) -> None:
-        for item in (self._rect_item, self._description_item):
-            self.removeFromGroup(item)
-
         rect_center = self._rect_item.mapToScene(self._rect_item.rect().center())
         description_center = self._description_item.mapToScene(self._description_item.boundingRect().center())
         self._description_item.setPos(self._description_item.scenePos() + (rect_center - description_center))
-
-        for item in (self._rect_item, self._description_item):
-            self.addToGroup(item)
-
-    def _adjust_description_item(self) -> None:
-        self.prepareGeometryChange()
-        self._adjust_centers()
-        self._rotate_description_item()
-        self._scale_description_item()
 
     def _change_rotation_angle(self, angle: float) -> None:
         """
@@ -72,30 +92,6 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         rotation = self._rotation or 0
         rotation -= int(angle / 90)
         self._rotation = ((abs(rotation) // 4) * 4 + rotation) % 4
-
-    def _create_rect_item_for_background(self, rect: QRectF) -> QGraphicsRectItem:
-        """
-        :param rect: rectangle bounding element.
-        :return: graphics rectangle item.
-        """
-
-        rect_item = QGraphicsRectItem(rect)
-        rect_item.setBrush(QBrush(self.BACKGROUND_COLOR))
-        rect_item.setOpacity(self.OPACITY)
-        return rect_item
-
-    def _create_text_item(self, name: str) -> QGraphicsTextItem:
-        """
-        :param name: element name.
-        :return: graphics text item.
-        """
-
-        text_item = QGraphicsTextItem(name)
-        font = QFont()
-        font.setFamily("arial")
-        text_item.setFont(font)
-        text_item.setDefaultTextColor(self.TEXT_COLOR)
-        return text_item
 
     def _rotate_description_item(self) -> None:
         self._description_item.setTransformOriginPoint(self._description_item.boundingRect().center())
@@ -110,22 +106,6 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
             else:
                 self._description_item.setRotation(0)
 
-    def _rotate_rect_item(self, angle: float, center: QPointF) -> None:
-        """
-        :param angle: the angle in degrees by which the item should be rotated clockwise;
-        :param center: the point around which the item needs to be rotated.
-        """
-
-        transform = QTransform()
-        transform.translate(center.x(), center.y())
-        transform.rotate(angle)
-        transform.translate(-center.x(), -center.y())
-
-        rect = self._rect_item.mapRectToScene(self._rect_item.rect())
-        rotated_rect = transform.mapRect(rect)
-        self._rect_item.setRect(QRectF(0, 0, rotated_rect.width(), rotated_rect.height()))
-        self._rect_item.setPos(rotated_rect.topLeft())
-
     def _scale_description_item(self) -> None:
         self._description_item.setScale(1)  # need to return the original value
         description_rect = self._description_item.mapToScene(self._description_item.boundingRect()).boundingRect()
@@ -134,27 +114,24 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         y_scale = rect.height() / description_rect.height()
         self._description_item.setScale(min(x_scale, y_scale))
 
-    def adjust_rect(self, rect: QRectF) -> None:
+    def _set_rect_item_background(self, opacity: float = 1) -> None:
         """
-        :param rect: a rectangle to the size of which you want to adjust the description item.
-        """
-
-        for item in (self._rect_item, self._description_item):
-            self.removeFromGroup(item)
-
-        self._rect_item.setRect(QRectF(0, 0, rect.width(), rect.height()))
-        self._rect_item.setPos(rect.topLeft())
-        self._adjust_description_item()
-
-        for item in (self._rect_item, self._description_item):
-            self.addToGroup(item)
-
-    def boundingRect(self) -> QRectF:
-        """
-        :return: outer bounds of the DescriptionItem as a rectangle.
+        :param opacity: the opacity to set for the description item.
         """
 
-        return self._rect_item.boundingRect()
+        if isinstance(self._description_item, self.GraphicsTextItem):
+            color = QColor(self.BACKGROUND_COLOR)
+            color.setAlphaF(self.OPACITY * opacity)
+            brush = QBrush(color)
+        else:
+            brush = QBrush(Qt.NoBrush)
+
+        self._rect_item.set_parameters(brush=brush)
+
+    def adjust_description_item(self) -> None:
+        self._adjust_centers()
+        self._rotate_description_item()
+        self._scale_description_item()
 
     def get_data_to_copy(self) -> Dict[str, Any]:
         """
@@ -164,36 +141,26 @@ class DescriptionItem(QGraphicsItemGroup, BaseComponent):
         return {"rotation": self._rotation,
                 "svg_file": self._svg_file}
 
-    def rotate_clockwise(self, angle: float, center: QPointF) -> None:
+    def hide(self) -> None:
+        self._rect_item.setBrush(QBrush(Qt.NoBrush))
+        self._description_item.item.hide()
+
+    def rotate_clockwise(self, angle: float) -> None:
         """
-        :param angle: the angle in degrees by which the item should be rotated clockwise;
-        :param center: the point around which the item needs to be rotated.
+        :param angle: the angle in degrees by which the item should be rotated clockwise.
         """
 
         self._change_rotation_angle(angle)
+        self.adjust_description_item()
 
-        for item in (self._rect_item, self._description_item):
-            self.removeFromGroup(item)
-
-        self._rotate_rect_item(angle, center)
-        self._adjust_centers()
-        self._rotate_description_item()
-
-        for item in (self._rect_item, self._description_item):
-            self.addToGroup(item)
-
-    def setPos(self, pos: QPointF) -> None:
+    def set_opacity(self, opacity: float) -> None:
         """
-        :param pos: the position in which the description item should be placed.
+        :param opacity: the opacity to set for the description item.
         """
 
-        for item in (self._rect_item, self._description_item):
-            self.removeFromGroup(item)
+        self._set_rect_item_background(opacity)
+        self._description_item.setOpacity(opacity)
 
-        self._rect_item.setPos(QPointF(0, 0))
-        self._adjust_centers()
-
-        for item in (self._rect_item, self._description_item):
-            self.addToGroup(item)
-
-        super().setPos(pos)
+    def show(self) -> None:
+        self._set_rect_item_background()
+        self._description_item.show()

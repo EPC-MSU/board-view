@@ -14,9 +14,8 @@ class ElementItem(ComponentGroup):
     PEN_COLOR: QColor = QColor(0, 0, 255)
     PEN_WIDTH: float = 0.5
     SELECTION_PEN_COLOR: QColor = QColor(0, 120, 255)
-    Z_DESCRIPTION: float = 1
     Z_PIN: float = 3
-    Z_RECT: float = 2
+    Z_RECT: float = 1
 
     def __init__(self, rect: QRectF, name: str, pen: Optional[QPen] = None, selection_pen: Optional[QPen] = None
                  ) -> None:
@@ -87,24 +86,6 @@ class ElementItem(ComponentGroup):
 
         return self._name
 
-    def _get_child_items(self) -> Tuple[Optional[DescriptionItem], Optional[RectComponent], List[PointComponent]]:
-        """
-        :return: description item, rectangular item and point items of element item.
-        """
-
-        description_item = None
-        rect_item = None
-        points = []
-        for item in self.childItems():
-            if isinstance(item, DescriptionItem):
-                description_item = item
-            elif isinstance(item, PointComponent):
-                points.append(item)
-            elif isinstance(item, RectComponent):
-                rect_item = item
-
-        return description_item, rect_item, points
-
     def _set_selection_from_group_to_rect(self, selected: bool) -> None:
         """
         :param selected: if True, then the element is selected.
@@ -138,7 +119,7 @@ class ElementItem(ComponentGroup):
         :return: outer bounds of the ElementItem as a rectangle.
         """
 
-        return self._rect_item.boundingRect()
+        return self._rect_item.rect()
 
     def convert_to_json(self) -> Dict[str, Any]:
         """
@@ -230,7 +211,7 @@ class ElementItem(ComponentGroup):
         :param event: hover event.
         """
 
-        self._description_item.setOpacity(0)
+        self._description_item.set_opacity(0)
         super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
@@ -238,7 +219,7 @@ class ElementItem(ComponentGroup):
         :param event: hover event.
         """
 
-        self._description_item.setOpacity(1)
+        self._description_item.set_opacity(1)
         super().hoverLeaveEvent(event)
 
     def move_pin(self, pin_or_index: Union[PointComponent, int], pos: QPointF) -> None:
@@ -264,6 +245,26 @@ class ElementItem(ComponentGroup):
             option.state &= not QStyle.State_Selected
         super().paint(painter, option, widget)
 
+    def rotate_clockwise(self, angle: float, center: QPointF) -> None:
+        """
+        :param angle: the angle in degrees by which the item should be rotated clockwise;
+        :param center: the point around which the item needs to be rotated.
+        """
+
+        self.prepareGeometryChange()
+
+        child_items = self.childItems()
+        for item in child_items:
+            self.removeFromGroup(item)
+
+        for item in (self._rect_item, *self._pins):
+            item.rotate_clockwise(angle, center)
+        self._description_item.rotate_clockwise(angle)
+
+        self.setPos(self._rect_item.pos())
+        for item in child_items:
+            self.addToGroup(item)
+
     def set_element_description(self, svg_file: Optional[str] = None, rotation: Optional[int] = None) -> None:
         """
         :param svg_file: path to the svg file with the ideal display of the element;
@@ -273,15 +274,13 @@ class ElementItem(ComponentGroup):
         """
 
         if self._description_item:
-            self.removeFromGroup(self._description_item)
+            self.removeFromGroup(self._description_item.item)
             if self.scene():
-                self.scene().removeItem(self._description_item)
+                self.scene().removeItem(self._description_item.item)
 
-        self._description_item = DescriptionItem(self._rect_item.rect(), name=self._name, svg_file=svg_file,
-                                                 rotation=rotation)
-        self._description_item.setZValue(self.Z_DESCRIPTION)
-        self._description_item.setPos(self._rect_item.scenePos())
-        self.addToGroup(self._description_item)
+        self._description_item = DescriptionItem(self._rect_item, name=self._name, svg_file=svg_file, rotation=rotation)
+        self._description_item.adjust_description_item()
+        self.addToGroup(self._description_item.item)
 
     def set_element_name(self, name: str) -> None:
         """
@@ -352,16 +351,15 @@ class ElementItem(ComponentGroup):
         :param new_rect: a new rectangle, the shape of which the element should take.
         """
 
-        for item in (self._rect_item, self._description_item):
+        self.prepareGeometryChange()
+        self.setPos(new_rect.topLeft())
+
+        for item in (self._rect_item, self._description_item.item):
             self.removeFromGroup(item)
 
         self._rect_item.setRect(QRectF(0, 0, new_rect.width(), new_rect.height()))
         self._rect_item.setPos(new_rect.topLeft())
+        self._description_item.adjust_description_item()
 
-        if self._description_item:
-            self._description_item.adjust_rect(new_rect)
-        else:
-            self.set_element_description()
-
-        for item in (self._rect_item, self._description_item):
+        for item in (self._rect_item, self._description_item.item):
             self.addToGroup(item)
