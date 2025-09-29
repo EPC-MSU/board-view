@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 setup(name="boardview",
-      version="2.0.1",
+      version="2.0.2",
       description="Board view widget for EyePoint",
       url="https://github.com/EPC-MSU/board-view",
       author="EPC MSU",
