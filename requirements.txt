@@ -1,3 +1,3 @@
-PyQt5==5.15.0
-PyQt5-sip==12.8.1
-PyQtExtendedScene==1.0.14
+PyQt5
+PyQt5-sip
+git+https://github.com/EPC-MSU/PyQtExtendedScene@t-126867#egg=PyQtExtendedScene

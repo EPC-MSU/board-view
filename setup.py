@@ -9,10 +9,9 @@ setup(name="boardview",
       author_email="info@physlab.ru",
       license="MIT",
       packages=find_packages(),
-      python_requires=">=3.6, <=3.8",
+      python_requires=">=3.6",
       install_requires=[
-            "PyQt5>=5.8.2, <=5.15.0",
-            "PyQtExtendedScene==1.0.14"
+            "PyQt5",
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
