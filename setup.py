@@ -13,7 +13,7 @@ setup(name="boardview",
       install_requires=[
           'PyQt5>=5.8.2, <=5.15.0; python_version=="3.6"',
           'PyQt5; python_version>"3.6"',
-          "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene.git@master"
+          # "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene.git@master"
     ],
       classifiers=[
             "Programming Language :: Python :: 3",
