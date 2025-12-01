@@ -21,7 +21,6 @@ def on_point_right_click(component) -> None:
 
 
 def on_right_click(pos: QPointF) -> None:
-    global counter, widget
     new_number = next(counter)
     widget.add_component(GraphicsManualPinItem(pos, new_number))
     print(f"Point #{new_number} created at ({pos.x()}, {pos.y()})")

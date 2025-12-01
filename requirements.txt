@@ -1,3 +1,4 @@
-PyQt5
-PyQt5-sip
-git+https://github.com/EPC-MSU/PyQtExtendedScene@t-126867#egg=PyQtExtendedScene
+PyQt5>=5.8.2, <=5.15.0; python_version=="3.6"
+PyQt5; python_version>"3.6"
+git+https://github.com/EPC-MSU/PyQtExtendedScene@v1.0.14#egg=PyQtExtendedScene; python_version=="3.6"
+git+https://github.com/EPC-MSU/PyQtExtendedScene@master#egg=PyQtExtendedScene; python_version>"3.6"
