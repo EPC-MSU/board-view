@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 PY_VERSION = sys.version_info[:2]
 dependencies = []
-if PY_VERSION == (3.6):
+if PY_VERSION == (3, 6):
     dependencies.extend([
         "PyQt5>=5.8.2, <=5.15.0",
         "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene.git@v1.0.14"
