@@ -69,7 +69,7 @@ class Pen:
         """
 
         pen = get_pen(Pen.selection_color, width)
-        pen.setStyle(Qt.CustomDashLine)
+        pen.setStyle(Qt.PenStyle.CustomDashLine)
         pattern = (0, 3, 0, 3, 3, 0, 3, 0)
         mod = int(monotonic() / update_interval) % (len(pattern) // 2)
         pen.setDashPattern(pattern[mod * 2:] + pattern[:mod * 2])

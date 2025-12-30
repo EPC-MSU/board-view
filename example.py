@@ -37,4 +37,4 @@ if __name__ == "__main__":
     widget.point_moved.connect(on_moved)
     widget.point_selected.connect(on_point_left_click)
     widget.show()
-    exit(app.exec())
+    app.exec()
