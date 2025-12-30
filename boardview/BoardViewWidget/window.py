@@ -1,6 +1,6 @@
 from typing import Optional
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
-from PyQt5.QtGui import QPixmap
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, QPointF
+from PyQt6.QtGui import QPixmap
 from PyQtExtendedScene import AbstractComponent, ExtendedScene
 from .pin import GraphicsManualPinItem
 

@@ -1,8 +1,8 @@
 import sys
 import unittest
 from typing import List
-from PyQt5.QtCore import QPointF
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtCore import QPointF
+from PyQt6.QtWidgets import QApplication
 from ..window import BoardView
 
 

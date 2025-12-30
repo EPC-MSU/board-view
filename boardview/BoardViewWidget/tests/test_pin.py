@@ -1,5 +1,5 @@
 import unittest
-from PyQt5.QtCore import QPointF
+from PyQt6.QtCore import QPointF
 from ..pin import GraphicsManualPinItem, Z
 
 

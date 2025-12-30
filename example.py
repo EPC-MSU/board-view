@@ -1,8 +1,8 @@
 import sys
 from itertools import count
-from PyQt5.QtCore import QPointF
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtCore import QPointF
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QApplication
 from boardview.BoardViewWidget import BoardView
 from boardview.BoardViewWidget.pin import GraphicsManualPinItem
 

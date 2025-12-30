@@ -1,8 +1,8 @@
 from collections import namedtuple
 from typing import List
-from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import QBrush, QPen
-from PyQt5.QtWidgets import QGraphicsEllipseItem
+from PyQt6.QtCore import QPointF, QRectF
+from PyQt6.QtGui import QBrush, QPen
+from PyQt6.QtWidgets import QGraphicsEllipseItem
 from PyQtExtendedScene import AbstractComponent
 from .pen import Pen
 

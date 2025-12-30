@@ -1,7 +1,7 @@
 from time import monotonic
 from typing import Optional, Union
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush, QColor, QPen
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QBrush, QColor, QPen
 
 
 def _create_pen_getter(color: Union[QBrush, QColor], fallback_width: float = 1.0):

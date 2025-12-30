@@ -1,7 +1,7 @@
 from itertools import count
 from json import dumps, loads
 from typing import Any, Dict, List
-from PyQt5.QtCore import QPointF
+from PyQt6.QtCore import QPointF
 
 
 def new_element(pins: List[Dict[str, Any]]) -> Dict[str, Any]:
