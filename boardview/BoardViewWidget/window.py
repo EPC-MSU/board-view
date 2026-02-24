@@ -1,6 +1,6 @@
 from typing import Optional
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF, Qt
+from PyQt5.QtGui import QPainter, QPen, QPixmap
 from PyQtExtendedScene import AbstractComponent, ExtendedScene
 from .pin import GraphicsManualPinItem
 
@@ -10,14 +10,17 @@ class BoardView(ExtendedScene):
     point_moved = pyqtSignal(int, QPointF)
     point_selected = pyqtSignal(int)
 
-    def __init__(self, background: Optional[QPixmap] = None, zoom_speed: float = 0.001, parent=None) -> None:
+    def __init__(self, background: Optional[QPixmap] = None, zoom_speed: float = 0.001, parent=None,
+                 cross_in_center: bool = False) -> None:
         """
         :param background: background image;
         :param zoom_speed: zoom speed;
-        :param parent: parent widget.
+        :param parent: parent widget;
+        :param cross_in_center: if it's True, then you need to draw a cross in the center of the scene.
         """
 
         super().__init__(background, zoom_speed, parent)
+        self._cross_in_center: bool = cross_in_center
         self.on_component_left_click.connect(self.__component_selected)
         self.on_component_moved.connect(self.__component_moved)
 
@@ -58,6 +61,28 @@ class BoardView(ExtendedScene):
         self._increment_point_numbers(number)
         item = GraphicsManualPinItem(pos, number)
         self.add_component(item)
+
+    def drawForeground(self, painter: QPainter, rect: QRectF) -> None:
+        """
+        :param painter:
+        :param rect:
+        """
+
+        if not self._cross_in_center:
+            super().drawForeground(painter, rect)
+            return
+
+        painter.resetTransform()
+        viewport_rect = self.viewport().rect()
+        center = viewport_rect.center()
+        cross_size = 30
+        cross_width = 3
+        painter.setPen(QPen(Qt.GlobalColor.yellow, cross_width))
+        shift = 7
+        painter.drawLine(center.x() - cross_size - shift, center.y(), center.x() - shift, center.y())
+        painter.drawLine(center.x() + cross_size + shift, center.y(), center.x() + shift, center.y())
+        painter.drawLine(center.x(), center.y() - cross_size - shift, center.x(), center.y() - shift)
+        painter.drawLine(center.x(), center.y() + cross_size + shift, center.x(), center.y() + shift)
 
     def remove_point(self, number: int) -> None:
         """
