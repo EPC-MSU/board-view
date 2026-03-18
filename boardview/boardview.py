@@ -5,7 +5,7 @@ from PIL.Image import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QCoreApplication as qApp, QPoint, QPointF, QRectF
 from PyQt5.QtGui import QBrush, QColor, QMouseEvent, QPen, QPixmap
-from PyQt5.QtWidgets import QGraphicsItem, QGraphicsScene, QMenu
+from PyQt5.QtWidgets import QAction, QGraphicsItem, QGraphicsScene, QMenu
 from PyQtExtendedScene import DrawingMode, ExtendedScene, PointComponent, RectComponent, SceneMode
 from PyQtExtendedScene.utils import (create_pen, get_class_by_name, get_min_zoom_factor,
                                      send_edited_components_changed_signal)
@@ -50,6 +50,7 @@ class BoardView(ExtendedScene):
         super().__init__(background, zoom_speed, parent, scene)
         self._element_names_to_show: bool = True
         self._elements: List[ElementItem] = []
+        self._elements_made_movable_by_user: Set[ElementItem] = set()
         self._deleted_points: Set[PointComponent] = set()
         self._moved_points: Set[PointComponent] = set()
         self._points_matching: Dict[PointComponent, PointComponent] = dict()
@@ -123,6 +124,15 @@ class BoardView(ExtendedScene):
                 self._edited_components.append(copied_point)
                 self._points_matching[copied_point] = self._edited_group.get_pin(i)
             self._edited_group.hide()
+
+    def _create_context_menu_action_to_make_selected_components_movable(self) -> QAction:
+        """
+        :return: context menu action to make selected components movable.
+        """
+
+        action = QAction(qApp.translate("boardview", "Move selected elements"))
+        action.triggered.connect(self.make_selected_components_movable)
+        return action
 
     def _create_new_element_item_from_existing_items(self) -> Optional[ElementItem]:
         """
@@ -316,6 +326,19 @@ class BoardView(ExtendedScene):
             rect_item.setRect(QRectF(QPointF(0, 0), rect_after.size()))
             rect_item.setPos(rect_after.topLeft())
 
+    @pyqtSlot(bool)
+    def _remove_element_from_movable_set(self, selected: bool) -> None:
+        """
+        :param selected: if False, then the component has become not selected.
+        """
+
+        if not hasattr(self.sender(), "component") or selected:
+            return
+
+        self.sender().component.setFlag(QGraphicsItem.ItemIsMovable, False)
+        self._elements_made_movable_by_user.discard(self.sender().component)
+        self.sender().component.selection_signal.disconnect(self._remove_element_from_movable_set)
+
     def _reset_containers_for_editing(self) -> None:
         self._deleted_points = set()
         self._edited_components = []
@@ -379,10 +402,17 @@ class BoardView(ExtendedScene):
             if rect_item and rect_item.contains_point(point):
                 menu_actions.append(self._create_context_menu_action_to_create_pin(pos))
         else:
+            enabled = bool(self.get_selected_element_items())
+            action_to_make_movable = self._create_context_menu_action_to_make_selected_components_movable()
+            action_to_make_movable.setEnabled(enabled)
+            menu_actions.append(action_to_make_movable)
+
             selected_elements = [item for item in self.get_selected_element_items()
                                  if item.flags() & QGraphicsItem.ItemIsMovable]
-            if selected_elements:
-                menu_actions.append(self._create_context_menu_action_to_rotate_selected_components())
+            enabled = bool(selected_elements)
+            action_to_rotate = self._create_context_menu_action_to_rotate_selected_components()
+            action_to_rotate.setEnabled(enabled)
+            menu_actions.append(action_to_rotate)
 
         if menu_actions:
             menu = QMenu()
@@ -614,6 +644,16 @@ class BoardView(ExtendedScene):
 
     def hide_element_descriptions(self) -> None:
         self._show_element_descriptions(False)
+
+    @pyqtSlot()
+    def make_selected_components_movable(self) -> None:
+        if self._view_mode is not ViewMode.NORMAL:
+            return
+
+        for item in self.get_selected_element_items():
+            item.setFlag(QGraphicsItem.ItemIsMovable, True)
+            item.selection_signal.connect(self._remove_element_from_movable_set)
+            self._elements_made_movable_by_user.add(item)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """
