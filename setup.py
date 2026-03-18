@@ -9,9 +9,11 @@ setup(name="boardview",
       author_email="info@physlab.ru",
       license="MIT",
       packages=find_packages(),
-      python_requires=">=3.6, <=3.8",
+      python_requires=">=3.6",
       install_requires=[
-            "PyQt5>=5.8.2, <=5.15.0",
+            "Pillow<10.0.0",
+            'PyQt5>=5.8.2, <=5.15.0; python_version=="3.6"',
+            'PyQt5; python_version>"3.6"'
             "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene@v2.0.1#egg=PyQtExtendedScene"
       ],
       classifiers=[
