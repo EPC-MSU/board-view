@@ -22,9 +22,9 @@ class BoardView(ExtendedScene):
     MIME_TYPE: str = "BoardView_MIME"
     PEN_WIDTH: float = 0.8
     element_item_deleted: pyqtSignal = pyqtSignal(int)
+    element_item_moved_or_rotated: pyqtSignal = pyqtSignal(ElementItem)
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
     element_item_position_edited: pyqtSignal = pyqtSignal(int, QRectF)
-    element_item_moved_or_rotated: pyqtSignal = pyqtSignal(ElementItem)
     pin_added: pyqtSignal = pyqtSignal(int, int, QPointF)
     pin_clicked: pyqtSignal = pyqtSignal(int, int)
     pin_deleted: pyqtSignal = pyqtSignal(int, int)
