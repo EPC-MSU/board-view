@@ -24,6 +24,7 @@ class BoardView(ExtendedScene):
     element_item_deleted: pyqtSignal = pyqtSignal(int)
     element_item_pasted: pyqtSignal = pyqtSignal(ElementItem, int)
     element_item_position_edited: pyqtSignal = pyqtSignal(int, QRectF)
+    element_item_moved_or_rotated: pyqtSignal = pyqtSignal(ElementItem)
     pin_added: pyqtSignal = pyqtSignal(int, int, QPointF)
     pin_clicked: pyqtSignal = pyqtSignal(int, int)
     pin_deleted: pyqtSignal = pyqtSignal(int, int)
@@ -335,9 +336,11 @@ class BoardView(ExtendedScene):
         if not hasattr(self.sender(), "component") or selected:
             return
 
-        self.sender().component.setFlag(QGraphicsItem.ItemIsMovable, False)
-        self._elements_made_movable_by_user.discard(self.sender().component)
-        self.sender().component.selection_signal.disconnect(self._remove_element_from_movable_set)
+        element_item = self.sender().component
+        element_item.setFlag(QGraphicsItem.ItemIsMovable, False)
+        element_item.selection_signal.disconnect(self._remove_element_from_movable_set)
+        self._elements_made_movable_by_user.discard(element_item)
+        self.element_item_moved_or_rotated.emit(element_item)
 
     def _reset_containers_for_editing(self) -> None:
         self._deleted_points = set()
