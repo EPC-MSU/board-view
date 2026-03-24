@@ -303,6 +303,7 @@ class BoardView(ExtendedScene):
         if isinstance(deleted_component, ElementItem) and deleted_component in self._elements:
             self.element_item_deleted.emit(self._elements.index(deleted_component))
             self._elements.remove(deleted_component)
+            self._elements_made_movable_by_user.discard(deleted_component)
 
     @pyqtSlot(QGraphicsItem)
     def _handle_pasting_of_element_item_using_hotkey(self, pasted_component: QGraphicsItem) -> None:
