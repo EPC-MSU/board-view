@@ -140,7 +140,8 @@ class BoardView(ExtendedScene):
         :return: new element item.
         """
 
-        element_name = ut.get_unique_element_name(self._components)
+        names = [component.name for component in self._components if hasattr(component, "name")]
+        element_name = ut.get_unique_name(names, "UserElement_")
         element_item = ElementItem.create_from_components(element_name, *self._edited_components)
         if element_item:
             self.add_element_item(element_item)

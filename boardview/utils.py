@@ -1,10 +1,10 @@
 import logging
 import os
+import re
 from typing import List, Optional
 from PyQt5.QtCore import QPointF, QRectF, QTranslator
-from PyQt5.QtWidgets import QApplication, QGraphicsItem
+from PyQt5.QtWidgets import QApplication
 from PyQtExtendedScene import utils as ut
-from .elementitem import ElementItem
 
 
 logger = logging.getLogger("boardview")
@@ -88,25 +88,29 @@ def get_ru_translator() -> Optional[QTranslator]:
     translator = QTranslator()
     dir_with_translation = os.path.join(DIR_PATH, "translation")
     if translator.load("translation_ru", dir_with_translation):
-        logger.info("Russian translator for boardview is loaded")
+        logger.info("Russian translation loaded")
         return translator
 
-    logger.error("Failed to load Russian translator for boardview")
+    logger.error("Failed to load Russian translation")
     return None
 
 
-def get_unique_element_name(items: List[QGraphicsItem]) -> str:
+def get_unique_name(names: List[str], name_template: str) -> str:
     """
-    :param items: list of ElementItems.
-    :return: a unique name for ElementItem, which is not found in any of the elements from the list.
+    :param names: list of names;
+    :param name_template: name template.
+    :return: a unique name that is not on the list.
     """
 
-    i = 1
-    name = "UserElement_{}"
-    element_names = {item.name.lower() for item in items if isinstance(item, ElementItem)}
-    while name.format(i).lower() in element_names:
-        i += 1
-    return name.format(i)
+    numbers = [0]
+    for name in names:
+        if name.startswith(name_template):
+            last_part = name[len(name_template):]
+            result = re.match(r"^(?P<number>\d+)$", last_part)
+            if last_part and result:
+                numbers.append(int(result.group("number")))
+
+    return f"{name_template}{max(numbers) + 1}"
 
 
 def get_valid_position_for_point_inside_rect(point: QPointF, rect: QRectF) -> QPointF:
@@ -131,6 +135,6 @@ def install_ru_translator(app: QApplication) -> None:
     translator = get_ru_translator()
     if translator and app.installTranslator(translator):
         app.boardview_translator = translator
-        logger.info("Russian translator for boardview is installed")
+        logger.info("Russian translation installed")
     else:
-        logger.error("Failed to install Russian translator for boardview")
+        logger.error("Failed to install Russian translation")
