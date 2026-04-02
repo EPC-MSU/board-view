@@ -14,13 +14,13 @@
 
 ## Настройка уровня логирования
 
-Для управления детализацией логов модуля используйте стандартную библиотеку **logging**. Получите логгер по имени "pyqtextendedscene" и установите нужный уровень:
+Для управления детализацией логов модуля используйте стандартную библиотеку **logging**. Получите логгер по имени "boardview" и установите нужный уровень:
 
 ```python
 import logging
 
 # Установите желаемый уровень (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-logging.getLogger("pyqtextendedscene").setLevel(logging.INFO)
+logging.getLogger("boardview").setLevel(logging.INFO)
 ```
 
 ## Классы
