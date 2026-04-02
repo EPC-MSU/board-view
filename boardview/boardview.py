@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Dict, List, Optional, Set, Tuple, Union
 import PIL
 from PIL.Image import Image
@@ -12,6 +13,9 @@ from PyQtExtendedScene.utils import (create_pen, get_class_by_name, get_min_zoom
 from . import utils as ut
 from .elementitem import ElementItem
 from .viewmode import ViewMode
+
+
+logger = logging.getLogger("boardview")
 
 
 class BoardView(ExtendedScene):
@@ -305,6 +309,7 @@ class BoardView(ExtendedScene):
             self.element_item_deleted.emit(self._elements.index(deleted_component))
             self._elements.remove(deleted_component)
             self._elements_made_movable_by_user.discard(deleted_component)
+            logger.debug("Element '%s' deleted", deleted_component.name)
 
     @pyqtSlot(QGraphicsItem)
     def _handle_pasting_of_element_item_using_hotkey(self, pasted_component: QGraphicsItem) -> None:
@@ -338,11 +343,12 @@ class BoardView(ExtendedScene):
         if not hasattr(self.sender(), "component") or selected:
             return
 
-        element_item = self.sender().component
-        element_item.setFlag(QGraphicsItem.ItemIsMovable, False)
-        element_item.selection_signal.disconnect(self._remove_element_from_movable_set)
-        self._elements_made_movable_by_user.discard(element_item)
-        self.element_item_moved_or_rotated.emit(element_item)
+        item = self.sender().component
+        item.setFlag(QGraphicsItem.ItemIsMovable, False)
+        item.selection_signal.disconnect(self._remove_element_from_movable_set)
+        self._elements_made_movable_by_user.discard(item)
+        self.element_item_moved_or_rotated.emit(item)
+        logger.debug("Element '%s' set to immovable", item.name)
 
     def _reset_containers_for_editing(self) -> None:
         self._deleted_points = set()
@@ -393,37 +399,6 @@ class BoardView(ExtendedScene):
             return True
 
         return False
-
-    @pyqtSlot(QPoint)
-    def _show_default_context_menu(self, pos: QPoint) -> None:
-        """
-        :param pos: position in which to show the context menu.
-        """
-
-        menu_actions = []
-        if self._view_mode is ViewMode.EDIT:
-            point = self.mapToScene(pos)
-            rect_item = self._get_rect_item_from_components_in_operation()
-            if rect_item and rect_item.contains_point(point):
-                menu_actions.append(self._create_context_menu_action_to_create_pin(pos))
-        else:
-            enabled = bool(self.get_selected_element_items())
-            action_to_make_movable = self._create_context_menu_action_to_make_selected_components_movable()
-            action_to_make_movable.setEnabled(enabled)
-            menu_actions.append(action_to_make_movable)
-
-            selected_elements = [item for item in self.get_selected_element_items()
-                                 if item.flags() & QGraphicsItem.ItemIsMovable]
-            enabled = bool(selected_elements)
-            action_to_rotate = self._create_context_menu_action_to_rotate_selected_components()
-            action_to_rotate.setEnabled(enabled)
-            menu_actions.append(action_to_rotate)
-
-        if menu_actions:
-            menu = QMenu()
-            for action in menu_actions:
-                menu.addAction(action)
-            menu.exec(self.mapToGlobal(pos))
 
     def _show_element_descriptions(self, show: bool) -> None:
         """
@@ -591,6 +566,24 @@ class BoardView(ExtendedScene):
         if self._view_mode is ViewMode.EDIT:
             self._delete_items_in_edit_mode()
 
+    def emit_normal_context_menu(self, pos: QPoint) -> None:
+        """
+        Emits a signal to display the context menu in normal mode.
+        :param pos: context menu display position.
+        """
+
+        item = self._get_clicked_item(pos)
+        if item and not self.scene().selectedItems():
+            return_unselected_state = True
+            item.setSelected(True)
+        else:
+            return_unselected_state = False
+
+        self._emit_context_menu_signal(pos)
+
+        if return_unselected_state and item not in self._elements_made_movable_by_user:
+            item.setSelected(False)
+
     def get_background_image(self) -> Optional[Image]:
         """
         :return: background image.
@@ -659,6 +652,7 @@ class BoardView(ExtendedScene):
             item.setFlag(QGraphicsItem.ItemIsMovable, True)
             item.selection_signal.connect(self._remove_element_from_movable_set)
             self._elements_made_movable_by_user.add(item)
+            logger.debug("Element '%s' set to movable", item.name)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """
@@ -805,6 +799,37 @@ class BoardView(ExtendedScene):
         scene_mode = SceneMode.NORMAL if mode is ViewMode.NORMAL else SceneMode.EDIT_GROUP
         self.set_scene_mode(scene_mode)
         self._view_mode = mode
+
+    @pyqtSlot(QPoint)
+    def show_default_context_menu(self, pos: QPoint) -> None:
+        """
+        :param pos: context menu display position.
+        """
+
+        menu_actions = []
+        if self._view_mode is ViewMode.EDIT:
+            point = self.mapToScene(pos)
+            rect_item = self._get_rect_item_from_components_in_operation()
+            if rect_item and rect_item.contains_point(point):
+                menu_actions.append(self._create_context_menu_action_to_create_pin(pos))
+        else:
+            enabled = bool(self.get_selected_element_items())
+            action_to_make_movable = self._create_context_menu_action_to_make_selected_components_movable()
+            action_to_make_movable.setEnabled(enabled)
+            menu_actions.append(action_to_make_movable)
+
+            selected_elements = [item for item in self.get_selected_element_items()
+                                 if item.flags() & QGraphicsItem.ItemIsMovable]
+            enabled = bool(selected_elements)
+            action_to_rotate = self._create_context_menu_action_to_rotate_selected_components()
+            action_to_rotate.setEnabled(enabled)
+            menu_actions.append(action_to_rotate)
+
+        if menu_actions:
+            menu = QMenu()
+            for action in menu_actions:
+                menu.addAction(action)
+            menu.exec(self.mapToGlobal(pos))
 
     def show_element_descriptions(self) -> None:
         self._show_element_descriptions(True)

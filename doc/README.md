@@ -12,6 +12,17 @@
 * **examples** - папка с примерами.
 * **tests** - тесты.
 
+## Настройка уровня логирования
+
+Для управления детализацией логов модуля используйте стандартную библиотеку **logging**. Получите логгер по имени "pyqtextendedscene" и установите нужный уровень:
+
+```python
+import logging
+
+# Установите желаемый уровень (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+logging.getLogger("pyqtextendedscene").setLevel(logging.INFO)
+```
+
 ## Классы
 
 В **boardview** есть следующие классы:
