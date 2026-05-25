@@ -14,7 +14,7 @@ setup(name="boardview",
             "Pillow<10.0.0",
             'PyQt5>=5.8.2, <=5.15.0; python_version=="3.6"',
             'PyQt5; python_version>"3.6"',
-            "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene@dev-2.0#egg=PyQtExtendedScene"
+            "PyQtExtendedScene @ git+https://github.com/EPC-MSU/PyQtExtendedScene@v2.0.2#egg=PyQtExtendedScene"
       ],
       package_data={"boardview": ["translation/translation_ru.qm"]},
       classifiers=[
